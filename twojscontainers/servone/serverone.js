@@ -18,7 +18,7 @@ const server = http.createServer((req, res) => {
           'Content-Type': 'application/json',
           'Content-Length': data.length,
         },
-        body: data,
+        //body: data,
       };
       
       const getoptions = {

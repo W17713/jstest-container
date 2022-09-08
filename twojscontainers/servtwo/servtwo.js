@@ -11,7 +11,7 @@ const getoptions = {
     method: 'GET',
   };
 
-const server = http.createServer(getoptions,(req, res) => {
+const server = http.createServer((req, res) => {
   res.statusCode = 200;
   res.setHeader('Content-Type', 'application/json');
   res.on('data', d => {
@@ -28,7 +28,7 @@ const server = http.createServer(getoptions,(req, res) => {
       data += chunk;
     });
     req.on('end', () => {
-      console.log(JSON.parse(data).msg); 
+      console.log(data);//JSON.parse(data).msg); 
       res.end('This is a response from servertwo');
     });
     
