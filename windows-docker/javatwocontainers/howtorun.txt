@@ -1,0 +1,25 @@
+run docker images with below command
+docker-compose up
+
+open below in browser:
+localhost:8080/serverone
+localhost:8008/servertwo
+
+
+NOTE: If package is not built yet, build packages for serverone and servertwo with maven
+  
+build package for serverone:
+cd serverone
+./mvnw package
+
+build package for servertwo:
+cd servertwo
+./mvnw package
+
+change to parent directory and run docker compose:
+cd ..
+docker-compose up
+
+open below in browser:
+localhost:8080/serverone
+localhost:8008/servertwo

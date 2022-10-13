@@ -1,0 +1,13 @@
+version: "2.0"
+services:
+  servone:
+      build: servone
+      network_mode: "host"
+      ports:
+                - "443:443"
+  sertwo:
+        build: servtwo
+        network_mode: "host"
+        ports:
+                - "3000:3000"
+                 

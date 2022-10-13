@@ -1,0 +1,9 @@
+build java app:
+cd demo
+docker build -t myjavaapp .
+
+run docker image:
+docker run --network="host" myjavaapp
+
+open app in browser (uses default port):
+localhost:8080/

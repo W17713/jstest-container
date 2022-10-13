@@ -1,0 +1,2 @@
+Run below command to start js and java containers:
+docker-compose up

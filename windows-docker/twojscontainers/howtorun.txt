@@ -1,0 +1,6 @@
+Description:
+serverone sends a POST request to servtwo 
+servtwo logs the message in a console
+
+Run:
+docker-compose up

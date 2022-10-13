@@ -1,0 +1,12 @@
+Edit below path in my Dockerfile to the path of the directory where app.js and Dockerfile can be found on your device
+/home/ubuntu/mycontainers/sc_app/jstest-container/app.js
+
+
+In the same directory where you have app.js and Dockerfile, run below to build the docker image
+docker build -t myjstest .
+
+After docker image is built, run below to instantiate docker image 
+docker run --network="host" myjstest
+
+Access it on localhost through host machine's browser 
+open http://127.0.0.1:8080/ in host browser 
