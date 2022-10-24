@@ -130,112 +130,121 @@ class Global{
     public static int input; //How many messages will be sent?
 
 }
-class SecureSenderConnector {
 
-    static Thread t_SecuritySenderCoordinator;
-    static Thread t_SynchronousMCWithReplySender;
 
-    static void aSecureSenderConnector(){
+class SecureReceiverConnector {
+    static Thread t_SecurityReceiverCoordinator;
+    static Thread t_SynchronousMCWithReplyReceiver;    
+    public static void aSecureReceiverConnector(){
         try {
 
-            SecuritySenderCoordinator securitySenderCoordinator = new SecuritySenderCoordinator();
-            securitySenderCoordinator.sendSecSync(
-);
-            t_SecuritySenderCoordinator = securitySenderCoordinator.t_SecuritySenderCoordinator;
+            SynchronousMCWithReplyReceiver synchronousMCWithReplyReceiver = new SynchronousMCWithReplyReceiver();
+            synchronousMCWithReplyReceiver.sendSecSync();
+            t_SynchronousMCWithReplyReceiver = synchronousMCWithReplyReceiver.t_SynchronousMCWithReplyReceiver;
 
-            SynchronousMCWithReplySender synchronousMCWithReplySender = new SynchronousMCWithReplySender();
-            synchronousMCWithReplySender.sendSecSync();
-            t_SynchronousMCWithReplySender = synchronousMCWithReplySender.t_SynchronousMCWithReplySender;
+            SecurityReceiverCoordinator securityReceiverCoordinator = new SecurityReceiverCoordinator();
+
+            securityReceiverCoordinator.sendSecSync();
+            t_SecurityReceiverCoordinator = securityReceiverCoordinator.t_SecurityReceiverCoordinator;
+
         }
         catch (Exception e){
             e.printStackTrace();
         }
+
     }
 }
 
-class SecuritySenderCoordinator implements Runnable {
-
-    Thread t_SecuritySenderCoordinator;
-
-    boolean resultRply;
-    public void sendSecSync(
-)throws Exception
-    {
-        t_SecuritySenderCoordinator = new Thread(this, "SecuritySenderCoordinator");
-        t_SecuritySenderCoordinator.start();
-    }
-    public void run()
-    {
-        int i=0;
-        Message message = new Message();
-        ByteMessage byteMessage = new ByteMessage();
-        KeyRequestMessage keyRequestMessage = new KeyRequestMessage();
-        Response response =new Response();
-        while(i<Global.input)
-        {
-            i++;
-
-            message = Global.buff1.receive();
-            try {
-                byteMessage.messageContent = (message.messageContent).getBytes();
-                byteMessage.messageName = (message.messageName).getBytes();
-                //Reply start from here!//
-                response = Global.buff2.send(byteMessage);
-
-                Global.buff1.reply(response);
-
- }catch (Exception e) {
-                e.printStackTrace();
-            }        }
-    }
-}
-class SynchronousMCWithReplySender implements Runnable {
-    Thread t_SynchronousMCWithReplySender;
+class SynchronousMCWithReplyReceiver implements Runnable {
+    Thread t_SynchronousMCWithReplyReceiver;
 
     public void sendSecSync() throws Exception{
-        t_SynchronousMCWithReplySender = new Thread(this, "SynchronousMCWithReplySender");
-        t_SynchronousMCWithReplySender.start();
+
+        t_SynchronousMCWithReplyReceiver = new Thread(this, "SynchronousMCWithReplyReceiver");
+        t_SynchronousMCWithReplyReceiver.start();
+
     }
 
     public void run()
     {
+
+        int i = 0;
         ByteMessage byteMessage = new ByteMessage();
-        Response response = new Response();
-        int i=0;
+        Response response= new Response();
+
+        while(i<Global.input)
+        {
+            i++;
+            byteMessage = Global.buff3.receive();
+            response = Global.buff4.send(byteMessage);
+            Global.buff3.reply(response);
+        }
+
+    }
+}
+
+
+
+class SecurityReceiverCoordinator implements Runnable
+{
+    Thread t_SecurityReceiverCoordinator;
+    boolean result;
+
+    public void sendSecSync(
+) throws Exception{
+        t_SecurityReceiverCoordinator = new Thread(this, "SecurityReceiverCoordinator");
+        t_SecurityReceiverCoordinator.start();
+        t_SecurityReceiverCoordinator = new Thread(this, "SecurityReceiverCoordinator");
+        t_SecurityReceiverCoordinator.start();
+ }
+    public void run(){
+        int i = 0;
         while(i<Global.input)
         {
             i++;
 
-            byteMessage = Global.buff2.receive();
+            KeyRequestMessage keyRequestMessage = new KeyRequestMessage();
+            ByteMessage byteMessage = new ByteMessage();
+            Message message = new Message();
+            Response response= new Response();
 
             try {
-                response = Global.buff3.send(byteMessage);
 
-                Global.buff2.reply(response);
+                byteMessage = Global.buff4.receive();
+                keyRequestMessage.messageName = "Request Key";
+
+                message.messageContent = new String(byteMessage.messageContent);
+                message.messageName = new String(byteMessage.messageName);
+                response =Global.buff5.send(byteMessage);
+
+                Global.buff4.reply(response);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-    }}
-//added Main for secure sender, other threads are commented 
-public class SMCWR_TD_RPLY{ //Main
-    public static void main(String args[]) throws Exception {
+    }
+}
+//added Main for secure receiver, other threads are commented 
+public class secureReceiver{ //Main
 
-        //Parameters
-         Global.input =10;    //programmer will decide input
- 
-         //CustomerComponent customerComponent = new CustomerComponent();
-         SecureSenderConnector.aSecureSenderConnector();
- 
-         //SecureReceiverConnector.aSecureReceiverConnector();
- 
- 
-         //RequisitionSever requisitionSever = new RequisitionSever();
-         //customerComponent.t_CustomerComponent.join();
-         SecureSenderConnector.t_SecuritySenderCoordinator.join();
-         SecureSenderConnector.t_SynchronousMCWithReplySender.join();
-         //SecureReceiverConnector.t_SecurityReceiverCoordinator.join();
-         //SecureReceiverConnector.t_SynchronousMCWithReplyReceiver.join();
-         //requisitionSever.t_RequisitionSever.join();
-      }
-  }
+    public static void main(String args[]) throws Exception {
+    
+           //Parameters
+            Global.input =10;    //programmer will decide input
+    
+            //CustomerComponent customerComponent = new CustomerComponent();
+            //SecureSenderConnector.aSecureSenderConnector();
+    
+            SecureReceiverConnector.aSecureReceiverConnector();
+    
+    
+            //RequisitionSever requisitionSever = new RequisitionSever();
+            //customerComponent.t_CustomerComponent.join();
+            //SecureSenderConnector.t_SecuritySenderCoordinator.join();
+            //SecureSenderConnector.t_SynchronousMCWithReplySender.join();
+            SecureReceiverConnector.t_SecurityReceiverCoordinator.join();
+            SecureReceiverConnector.t_SynchronousMCWithReplyReceiver.join();
+            //requisitionSever.t_RequisitionSever.join();
+         }
+     }
+
