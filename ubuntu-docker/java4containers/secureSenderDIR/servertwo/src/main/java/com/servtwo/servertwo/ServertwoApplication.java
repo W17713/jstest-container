@@ -1,62 +1,22 @@
+package com.servtwo.servertwo;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.json.JSONObject; 
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
 import java.security.*;
 import java.util.*;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 
-
 class Message {
     String messageName = null;
     String messageContent = null;
 
-}
-
-class MBR1 {  //Message Buffer and Response using Message Class
-
-    private Response response;
-    private Message message;
-    private boolean messageBufferFull = false;
-    private boolean responseBufferFull = false;
-
-    synchronized Response send(Message message)
-    {
-        this.message = message;
-        messageBufferFull = true;
-        notify();
-        while(responseBufferFull==false)
-            try
-            {
-                wait();
-            }
-            catch(InterruptedException e)
-            {
-                System.out.println("InterruptedException caught");
-            }
-        //this.response = response;
-        responseBufferFull = false;
-        return response;
-    }
-
-    synchronized Message receive()
-    {
-        while(messageBufferFull==false)
-            try
-            {
-                wait();
-            }
-            catch(InterruptedException e)
-            {
-                System.out.println("InterruptedException caught");
-            }
-        messageBufferFull = false;
-        notify();
-        return message;
-    }
-    synchronized void reply(Response response)
-    {
-        this.response = response;
-        responseBufferFull = true;
-        notify();
-    }
 }
 
 class ByteMessage {
@@ -66,8 +26,6 @@ class ByteMessage {
 }
 class Response {
     byte[] status = null;
-
-
 }
 
 class MBR {  //Message Buffer and Response using ByteMessage class
@@ -122,11 +80,11 @@ class KeyRequestMessage {
     String messageName = null;
 }
 class Global{
-    public static MBR1 buff1 = new MBR1(); //between sender component and security sender coordinator
+    //public static MBR1 buff1 = new MBR1(); //between sender component and security sender coordinator
     public static MBR buff2 = new MBR(); // between sender coordinator and SMCWR sender
     public static MBR buff3 = new MBR(); //between SMCWR sender and SMCWR receiver
-    public static MBR buff4 = new MBR(); //between SMCWR receiver and security receiver coordinator
-    public static MBR buff5 = new MBR(); //to send byteMessage between security receiver coordinator and receiver component
+    //public static MBR buff4 = new MBR(); //between SMCWR receiver and security receiver coordinator
+    //public static MBR buff5 = new MBR(); //to send byteMessage between security receiver coordinator and receiver component
     public static int input; //How many messages will be sent?
 
 }
@@ -216,33 +174,61 @@ class SynchronousMCWithReplySender implements Runnable {
             byteMessage = Global.buff2.receive();
 
             try {
-                response = Global.buff3.send(byteMessage); //replace with post request
+                //response = Global.buff3.send(byteMessage); //replace with post request
+                RestTemplate resttemp = new RestTemplate();
+                String baseurl = "http://127.0.0.1:8080/sendmessagetwo";
+                URI uri = new URI(baseurl);
+                ResponseEntity<String> result = resttemp.postForEntity(uri,byteMessage,String.class);
+                String Status = new String(result.getStatusCodeValue());
+                if (Status == 201){//check response results 
+                    System.out.println("Status is: " +Status+"\n\n");
+                        //return "Data received. This is a response from server two";
+                        Global.buff2.reply(response);
+                        }
 
-                Global.buff2.reply(response);
+                //Global.buff2.reply(response);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
     }}
-//added Main for secure sender, other threads are commented 
-public class secureSender{ //Main
-    public static void main(String args[]) throws Exception {
 
-        //Parameters
-         //Global.input =10;    //programmer will decide input
- 
-         //CustomerComponent customerComponent = new CustomerComponent();
-         SecureSenderConnector.aSecureSenderConnector();
- 
-         //SecureReceiverConnector.aSecureReceiverConnector();
- 
- 
-         //RequisitionSever requisitionSever = new RequisitionSever();
-         //customerComponent.t_CustomerComponent.join();
-         SecureSenderConnector.t_SecuritySenderCoordinator.join();
-         SecureSenderConnector.t_SynchronousMCWithReplySender.join();
-         //SecureReceiverConnector.t_SecurityReceiverCoordinator.join();
-         //SecureReceiverConnector.t_SynchronousMCWithReplyReceiver.join();
-         //requisitionSever.t_RequisitionSever.join();
-      }
-  }
+@RestController
+@SpringBootApplication
+public class ServertwoApplication {
+     @GetMapping("/securesender")
+     public String home(){
+
+         return "This is the secure sender server";
+         }
+
+     //Handling post request
+     //@PostMapping(path="/sendmessage",consumes = "any", produces = "application/octet-stream")
+     @PostMapping("/sendmessage")
+     public String insert(@RequestBody String ob)
+          {
+            SecureSenderConnector.aSecureSenderConnector(ob);
+            SecureSenderConnector.t_SecuritySenderCoordinator.join();
+            SecureSenderConnector.t_SynchronousMCWithReplySender.join();
+
+            /*RestTemplate resttemp = new RestTemplate();
+            String baseurl = "http://127.0.0.1:80/sendmessage";
+            URI uri = new URI(baseurl);
+            ResponseEntity<String> result = resttemp.postForEntity(uri,ob,String.class);
+            String Status = new String(result.getStatusCodeValue());
+            if (Status == 201){//check response results 
+                    System.out.println("Status is: " +Status+"\n\n");
+                    return "Data received. This is a response from server two";
+                        }*/
+          // Storing the incoming data in the list
+               //Data.add(new Details(ob.number, ob.name));
+               //String message = ob.toString();
+               //System.out.println("message received "+ob);
+               //return "Data received. This is a response from server two";
+                   }
+
+	public static void main(String[] args) {
+		SpringApplication.run(ServertwoApplication.class, args);
+	}
+
+}

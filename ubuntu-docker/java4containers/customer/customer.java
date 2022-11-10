@@ -1,12 +1,16 @@
+//import java.net.http.HttpRequest;
 import java.security.*;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
+//added
+import java.net.*;
+
 
 class Message {
           String messageName = null;
           String messageContent = null; 
            }
-            
+ /*           
 class MBR1 {  //Message Buffer and Response using Message Class
               
            private Response response;
@@ -53,15 +57,15 @@ class MBR1 {  //Message Buffer and Response using Message Class
                                                         responseBufferFull = true;
                                                          notify();
                                                       }
-             }
+             }*/
 
- class Response {
+ /*class Response {
            byte[] status = null; 
-          }
+          }*/
 
 
 class Global{
-         public static MBR1 buff1 = new MBR1(); //between sender component and se    curity sender coordinator
+         //public static MBR1 buff1 = new MBR1(); //between sender component and se    curity sender coordinator
          //public static MBR buff2 = new MBR(); // between sender coordinator and S    MCWR sender
          //public static MBR buff3 = new MBR(); //between SMCWR sender and SMCWR re    ceiver
          //public static MBR buff4 = new MBR(); //between SMCWR receiver and securi    ty receiver coordinator
@@ -105,17 +109,25 @@ class CustomerComponent  implements Runnable {
         int i = 0;
 
         Message message = new Message();
-        Response response = new Response();
+        //Response response = new Response();
         while(i<Global.input)
         {
             i++;
             message.messageName = new String("Place Requisition "+ i);
             message.messageContent = new String("Requisition Order Number: " + i);
 
-            response = Global.buff1.send(message);
-            String Status = new String(response.status);
-            System.out.println("Status is: " +Status+"\n\n");
+            //response = Global.buff1.send(message);
+            
+            //String Status = new String(response.status);
+            //System.out.println("Status is: " +Status+"\n\n");
         }
+        //Replaced with post request
+        var uri = new URI("http://localhost:80/messageone");
+        var client = new HttpClient.newHttpClient();
+        var request = HttpRequest.newBuilder(uri).POST(BodyPublishers.ofString(message)).header("Content-type","octet-stream").build();
+        var postresponse = client.send(request,BodyHandlers.discarding());
+        String Status = new String(postresponse.status);
+        System.out.println("Status is: " +Status+"\n\n");
     }
 }
 
