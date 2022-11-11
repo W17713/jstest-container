@@ -7,16 +7,49 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-
+import java.net.URI;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.ResponseEntity;
+import java.lang.*;
 import java.security.*;
 import java.util.*;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 
+@RestController
+@SpringBootApplication
+public class ServertwoApplication {
+          @GetMapping("/securesender")
+          public String home(){
+          
+                   return "This is the secure sender server";
+                   }
+          
+               //Handling post request
+               //@PostMapping(path="/sendmessage",consumes = "any", produces = "application/octet-stream")
+               @PostMapping("/sendmessage")
+               public String insert(@RequestBody String ob)
+                    {
+                        try{
+                          SecureSenderConnector.aSecureSenderConnector(ob);
+                          SecureSenderConnector.t_SecuritySenderCoordinator.join();
+                          SecureSenderConnector.t_SynchronousMCWithReplySender.join();
+                        }catch(InterruptedException e)
+                                {
+                                     System.out.println("InterruptedException caught");
+                                                                    }
+                          return "Data received";
+}
+ 
+     public static void main(String[] args) {
+             SpringApplication.run(ServertwoApplication.class, args);
+         }
+        }
+
+
 class Message {
     String messageName = null;
     String messageContent = null;
-
 }
 
 class ByteMessage {
@@ -24,6 +57,7 @@ class ByteMessage {
     byte[] messageContent = null;
 
 }
+
 class Response {
     byte[] status = null;
 }
@@ -67,6 +101,7 @@ class MBR {  //Message Buffer and Response using ByteMessage class
         notify();
         return byteMessage;
     }
+
     synchronized void reply(Response response)
     {
         this.response= response;
@@ -79,6 +114,7 @@ class MBR {  //Message Buffer and Response using ByteMessage class
 class KeyRequestMessage {
     String messageName = null;
 }
+
 class Global{
     //public static MBR1 buff1 = new MBR1(); //between sender component and security sender coordinator
     public static MBR buff2 = new MBR(); // between sender coordinator and SMCWR sender
@@ -86,10 +122,9 @@ class Global{
     //public static MBR buff4 = new MBR(); //between SMCWR receiver and security receiver coordinator
     //public static MBR buff5 = new MBR(); //to send byteMessage between security receiver coordinator and receiver component
     public static int input; //How many messages will be sent?
-
 }
-class SecureSenderConnector {
 
+class SecureSenderConnector {
     static Thread t_SecuritySenderCoordinator;
     static Thread t_SynchronousMCWithReplySender;
 
@@ -112,15 +147,18 @@ class SecureSenderConnector {
 }
 
 class SecuritySenderCoordinator implements Runnable {
+    //added
+    String msg = new String();
+    public SecuritySenderCoordinator(String msg){
+                 this.msg = msg;
+             }
 
+  
     Thread t_SecuritySenderCoordinator;
 
     boolean resultRply;
 
-    //added
-    public SecuritySenderCoordinator(String msg){
-        this.msg = msg;
-    }
+    
     public void sendSecSync(
 )throws Exception
     {
@@ -139,7 +177,7 @@ class SecuritySenderCoordinator implements Runnable {
             i++;
 
             //message = Global.buff1.receive();
-            message=this.msg; //message received from server one
+            message.messageContent=this.msg; //message received from server one
 
             try {
                 byteMessage.messageContent = (message.messageContent).getBytes();
@@ -179,7 +217,8 @@ class SynchronousMCWithReplySender implements Runnable {
                 String baseurl = "http://127.0.0.1:8080/sendmessagetwo";
                 URI uri = new URI(baseurl);
                 ResponseEntity<String> result = resttemp.postForEntity(uri,byteMessage,String.class);
-                String Status = new String(result.getStatusCodeValue());
+                //String Status = new String(result.getStatusCodeValue());
+                int Status = result.getStatusCodeValue();
                 if (Status == 201){//check response results 
                     System.out.println("Status is: " +Status+"\n\n");
                         //return "Data received. This is a response from server two";
@@ -191,11 +230,12 @@ class SynchronousMCWithReplySender implements Runnable {
                 e.printStackTrace();
             }
         }
-    }}
+    }
+    }
 
-@RestController
-@SpringBootApplication
-public class ServertwoApplication {
+//@RestController
+//@SpringBootApplication
+/*public class ServertwoApplication {
      @GetMapping("/securesender")
      public String home(){
 
@@ -225,10 +265,11 @@ public class ServertwoApplication {
                //String message = ob.toString();
                //System.out.println("message received "+ob);
                //return "Data received. This is a response from server two";
-                   }
+                
+                /*   }
 
 	public static void main(String[] args) {
 		SpringApplication.run(ServertwoApplication.class, args);
 	}
 
-}
+}*/

@@ -86,6 +86,7 @@ class CustomerComponent  implements Runnable {
             var postresponse = client.send(request,BodyHandlers.discarding());
             String Status = new String(postresponse.status);
             System.out.println("Status is: " +Status+"\n\n");*/
+            try{
             RestTemplate resttemp = new RestTemplate();
             String baseurl = "http://127.0.0.1:3000/sendmessage";
             URI uri = new URI(baseurl);
@@ -94,11 +95,19 @@ class CustomerComponent  implements Runnable {
                       //Details detail = new Details("1","This is a request from serverone");
             //String detail ="This is a request from server one";
             ResponseEntity<String> result = resttemp.postForEntity(uri,message.messageContent,String.class);
-            String Status = new String(result.getStatusCodeValue());
+            //String Status = new String(result.getStatusCodeValue());
+            int Status = result.getStatusCodeValue();
             if (Status == 201){//check response results 
                     System.out.println("Status is: " +Status+"\n\n");
                         }
-        }
+        }catch(Exception e){
+             String errorMessage = null;
+             errorMessage = e.getMessage();
+             //return errorMessage;
+             System.out.println(errorMessage);
+             }
     }
+}
+
 
 

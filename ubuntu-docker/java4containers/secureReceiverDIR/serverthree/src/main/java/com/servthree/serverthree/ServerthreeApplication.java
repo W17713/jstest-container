@@ -7,7 +7,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-
+import java.net.URI;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.ResponseEntity;
+import java.lang.*;
 import java.security.*;
 import java.util.*;
 import javax.crypto.Cipher;
@@ -134,9 +137,9 @@ class KeyRequestMessage {
 class Global{
     //public static MBR1 buff1 = new MBR1(); //between sender component and security sender coordinator
     //public static MBR buff2 = new MBR(); // between sender coordinator and SMCWR sender
-    //public static MBR buff3 = new MBR(); //between SMCWR sender and SMCWR receiver
+    public static MBR buff3 = new MBR(); //between SMCWR sender and SMCWR receiver
     public static MBR buff4 = new MBR(); //between SMCWR receiver and security receiver coordinator
-    //public static MBR buff5 = new MBR(); //to send byteMessage between security receiver coordinator and receiver component
+    public static MBR buff5 = new MBR(); //to send byteMessage between security receiver coordinator and receiver component
     public static int input; //How many messages will be sent?
 
 }
@@ -252,25 +255,34 @@ public class ServerthreeApplication {
      @PostMapping("/sendmessage")
      public String insert(@RequestBody String ob)
           {
+            try{
             Global.input =1;    //programmer will decide input    
-            SecureReceiverConnector.aSecureReceiverConnector(ob);
+            SecureReceiverConnector.aSecureReceiverConnector();
             SecureReceiverConnector.t_SecurityReceiverCoordinator.join();
             SecureReceiverConnector.t_SynchronousMCWithReplyReceiver.join();
-
+                               }catch(InterruptedException e)
+                                  {
+                                    System.out.println("InterruptedException caught");
+                                                }
+            try{
             RestTemplate resttemp = new RestTemplate();
             String baseurl = "http://127.0.0.1:80/sendmessage";
             URI uri = new URI(baseurl);
             ResponseEntity<String> result = resttemp.postForEntity(uri,ob,String.class);
-            String Status = new String(result.getStatusCodeValue());
+            //String Status = new String(result.getStatusCodeValue());
+            int Status = result.getStatusCodeValue();
             if (Status == 201){//check response results 
                     System.out.println("Status is: " +Status+"\n\n");
-                    return "Data received. This is a response from server two";
+                    return "Data received. This is a response from server three";
                         }
+                           } catch (Exception e) {
+                                             e.printStackTrace();
+                                         }
           // Storing the incoming data in the list
                //Data.add(new Details(ob.number, ob.name));
                //String message = ob.toString();
                //System.out.println("message received "+ob);
-               //return "Data received. This is a response from server two";
+               return "This is server three";
                    }
 
 	public static void main(String[] args) {
