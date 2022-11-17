@@ -148,14 +148,14 @@ class Global{
 class SecureReceiverConnector {
     static Thread t_SecurityReceiverCoordinator;
     static Thread t_SynchronousMCWithReplyReceiver;    
-    public static void aSecureReceiverConnector(){
+    public static void aSecureReceiverConnector(String msg){
         try {
 
             SynchronousMCWithReplyReceiver synchronousMCWithReplyReceiver = new SynchronousMCWithReplyReceiver();
             synchronousMCWithReplyReceiver.sendSecSync();
             t_SynchronousMCWithReplyReceiver = synchronousMCWithReplyReceiver.t_SynchronousMCWithReplyReceiver;
 
-            SecurityReceiverCoordinator securityReceiverCoordinator = new SecurityReceiverCoordinator();
+            SecurityReceiverCoordinator securityReceiverCoordinator = new SecurityReceiverCoordinator(msg);
 
             securityReceiverCoordinator.sendSecSync();
             t_SecurityReceiverCoordinator = securityReceiverCoordinator.t_SecurityReceiverCoordinator;
@@ -169,6 +169,7 @@ class SecureReceiverConnector {
 }
 
 class SynchronousMCWithReplyReceiver implements Runnable {
+    
     Thread t_SynchronousMCWithReplyReceiver;
 
     public void sendSecSync() throws Exception{
@@ -184,13 +185,47 @@ class SynchronousMCWithReplyReceiver implements Runnable {
         int i = 0;
         ByteMessage byteMessage = new ByteMessage();
         Response response= new Response();
+        //message.messageContent=this.msg;
+        //System.out.println("Message content received on secure receiver server is: " +message.messageContent+"\n\n");
+        
 
         while(i<Global.input)
         {
             i++;
-            byteMessage = Global.buff3.receive();
-            response = Global.buff4.send(byteMessage);
-            Global.buff3.reply(response);
+           // try {
+                                 //byteMessage.messageContent = (message.messageContent).getBytes();
+                                 //byteMessage.messageName = ("message.messageName").getBytes()    ;
+                                 //Reply start from here!//
+                                 //response = Global.buff2.send(byteMessage);
+                                 //response = Global.buff4.send(byteMessage);
+                
+                                 //Global.buff1.reply(response);
+                                 byteMessage = Global.buff3.receive();
+                                   try {
+                                       String messagethree= new String(byteMessage.messageContent);
+                                            //Added byte to string conversion
+                                            //String messagethree= byteMessage.toString();
+                                            //response = Global.buff3.send(byteMessage); //replace with     post request
+                                            RestTemplate resttemp = new RestTemplate();
+                                           String baseurl = "http://127.0.0.1:80/sendmessage";
+                                            URI uri = new URI(baseurl);
+                                            ResponseEntity<String> result = resttemp.postForEntity(uri,messagethree,String.class);
+                                            //String Status = new String(result.getStatusCodeValue());
+                                           int Status = result.getStatusCodeValue();
+                                           if (Status == 201){//check response results 
+                                                System.out.println("Status is: " +Status+"\n\n");
+                                                    //return "Data received. This is a response from ser    ver two";
+                                                    Global.buff3.reply(response);
+                                                    }
+
+                 
+                  }catch (Exception e) {
+                                     e.printStackTrace();
+                                 }
+            //byteMessage = Global.buff3.receive();
+            //byteMessage.toString()
+            //response = Global.buff4.send(byteMessage);
+            //Global.buff3.reply(response);
         }
 
     }
@@ -200,6 +235,12 @@ class SynchronousMCWithReplyReceiver implements Runnable {
 
 class SecurityReceiverCoordinator implements Runnable
 {
+    //added
+    String msg = new String();
+    public SecurityReceiverCoordinator(String msg){
+                                   this.msg = msg;
+                               }
+
     Thread t_SecurityReceiverCoordinator;
     boolean result;
 
@@ -212,6 +253,8 @@ class SecurityReceiverCoordinator implements Runnable
  }
     public void run(){
         int i = 0;
+        //message.messageContent=this.msg;
+        //System.out.println("Message content received on secure receiver server is: " +message.messageContent+"\n\n");
         while(i<Global.input)
         {
             i++;
@@ -221,6 +264,10 @@ class SecurityReceiverCoordinator implements Runnable
             Message message = new Message();
             Response response= new Response();
 
+            message.messageContent=this.msg;
+            System.out.println("Message content received on secure receiver server is: " +message.messageContent+"\n\n");
+            //System.out.println("Message content received on secure receiver server is: " +this.msg+"\n\n");
+
             try {
 
                 byteMessage = Global.buff4.receive();
@@ -229,7 +276,16 @@ class SecurityReceiverCoordinator implements Runnable
                 message.messageContent = new String(byteMessage.messageContent);
                 message.messageName = new String(byteMessage.messageName);
                 response =Global.buff5.send(byteMessage);
-
+                /*RestTemplate resttemp = new RestTemplate();
+                String baseurl = "http://127.0.0.1:80/sendmessage";
+                URI uri = new URI(baseurl);
+                ResponseEntity<String> result = resttemp.postForEntity(uri,message.messageContent,String.class);
+                //String Status = new String(result.getStatusCodeValue());
+                int Status = result.getStatusCodeValue();
+                if (Status == 201){//check response results 
+                                         System.out.println("Status is: " +Status+"\n\n");
+                                         return "Data received. This is a response from server three";
+                                    }*/
                 Global.buff4.reply(response);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -257,14 +313,14 @@ public class ServerthreeApplication {
           {
             try{
             Global.input =1;    //programmer will decide input    
-            SecureReceiverConnector.aSecureReceiverConnector();
+            SecureReceiverConnector.aSecureReceiverConnector(ob);
             SecureReceiverConnector.t_SecurityReceiverCoordinator.join();
             SecureReceiverConnector.t_SynchronousMCWithReplyReceiver.join();
                                }catch(InterruptedException e)
                                   {
                                     System.out.println("InterruptedException caught");
                                                 }
-            try{
+            /*try{
             RestTemplate resttemp = new RestTemplate();
             String baseurl = "http://127.0.0.1:80/sendmessage";
             URI uri = new URI(baseurl);
@@ -277,7 +333,7 @@ public class ServerthreeApplication {
                         }
                            } catch (Exception e) {
                                              e.printStackTrace();
-                                         }
+                                         }*/
           // Storing the incoming data in the list
                //Data.add(new Details(ob.number, ob.name));
                //String message = ob.toString();
