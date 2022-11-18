@@ -38,7 +38,7 @@ public class ServertwoApplication {
                                 {
                                      System.out.println("InterruptedException caught");
                                                                     }
-                          return "Data received";
+                          return Global.rsp;
 }
  
      public static void main(String[] args) {
@@ -75,8 +75,11 @@ class MBR {  //Message Buffer and Response using ByteMessage class
         notify();
         while(responseBufferFull==false)
             try
-            {
+            { //before wait
+                //System.out.println("About to wait");
                 wait();
+              //after wait
+                //System.out.println("Finished waiting");
             }
             catch(InterruptedException e)
             {
@@ -122,6 +125,7 @@ class Global{
     //public static MBR buff4 = new MBR(); //between SMCWR receiver and security receiver coordinator
     //public static MBR buff5 = new MBR(); //to send byteMessage between security receiver coordinator and receiver component
     public static int input; //How many messages will be sent?
+    public static String rsp = new String(); //added
 }
 
 class SecureSenderConnector {
@@ -172,16 +176,21 @@ class SecuritySenderCoordinator implements Runnable {
         ByteMessage byteMessage = new ByteMessage();
         KeyRequestMessage keyRequestMessage = new KeyRequestMessage();
         Response response =new Response();
+        message.messageContent=this.msg;
+        System.out.println("Message content received on secure sender server is: " +message.messageContent+"\n\n");
+        Global.input=1;
         while(i<Global.input)
         {
             i++;
 
             //message = Global.buff1.receive();
-            message.messageContent=this.msg; //message received from server one
+            //message.messageContent=this.msg; //message received from server one
 
             try {
+                //System.out.println("Sending message content");
                 byteMessage.messageContent = (message.messageContent).getBytes();
                 //byteMessage.messageName = (message.messageName).getBytes();
+                byteMessage.messageName = ("message.messageName").getBytes();
                 //Reply start from here!//
                 response = Global.buff2.send(byteMessage);
 
@@ -210,19 +219,25 @@ class SynchronousMCWithReplySender implements Runnable {
             i++;
 
             byteMessage = Global.buff2.receive();
-
+            //System.out.println("bm "+byteMessage);
+            //System.out.println("bm content "+new String(byteMessage.messageContent));
             try {
+                //Added byte to string conversion
+                String messagetwo= new String(byteMessage.messageContent);
                 //response = Global.buff3.send(byteMessage); //replace with post request
                 RestTemplate resttemp = new RestTemplate();
-                String baseurl = "http://127.0.0.1:8080/sendmessagetwo";
+                String baseurl = "http://127.0.0.1:8080/sendmessage";
                 URI uri = new URI(baseurl);
-                ResponseEntity<String> result = resttemp.postForEntity(uri,byteMessage,String.class);
+                ResponseEntity<String> result = resttemp.postForEntity(uri,messagetwo,String.class);
                 //String Status = new String(result.getStatusCodeValue());
                 int Status = result.getStatusCodeValue();
+                Global.rsp=result.getBody();
+                System.out.println("response is "+Global.rsp);
+                System.out.println("getBody response is "+result.getBody());
                 if (Status == 201){//check response results 
                     System.out.println("Status is: " +Status+"\n\n");
                         //return "Data received. This is a response from server two";
-                        Global.buff2.reply(response);
+                        //Global.buff2.reply(response);
                         }
 
                 //Global.buff2.reply(response);

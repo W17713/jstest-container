@@ -1,0 +1,25 @@
+version: "2.0"
+services:
+  servone:
+      build: customer
+      network_mode: "host"
+      ports:
+                - "443:443"
+  servtwo:
+        build: secureSenderDIR
+        network_mode: "host"
+        ports:
+                - "3000:3000"
+
+  servthree:
+        build: secureReceiverDIR
+        network_mode: "host"
+        ports:
+                - "8080:8080"
+  servfour:
+        build: requisitionServer
+        network_mode: "host"
+        ports:
+                - "80:80"
+
+                 

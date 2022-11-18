@@ -27,7 +27,7 @@ public class ServeroneApplication {
    public String home() {
                       try{
                             //Parameters
-                            Global.input =10;    //programmer will decide input
+                            Global.input =1;    //programmer will decide input
                             CustomerComponent customerComponent = new CustomerComponent();
                             customerComponent.t_CustomerComponent.join();
                      return "This is the customer server";
@@ -52,7 +52,7 @@ class Message {
 
 class Global{
         public static int input; //How many messages will be sent?
-    
+        public static String rsp = new String(); //added
     }
 
 class CustomerComponent  implements Runnable {
@@ -95,6 +95,8 @@ class CustomerComponent  implements Runnable {
                       //Details detail = new Details("1","This is a request from serverone");
             //String detail ="This is a request from server one";
             ResponseEntity<String> result = resttemp.postForEntity(uri,message.messageContent,String.class);
+            Global.rsp=result.getBody();
+            System.out.println(Global.rsp);
             //String Status = new String(result.getStatusCodeValue());
             int Status = result.getStatusCodeValue();
             if (Status == 201){//check response results 

@@ -92,29 +92,40 @@ class Global{
 
 class RequisitionSever implements Runnable
 {
+    String msg = new String();
+    public RequisitionSever(String msg){
+                          this.msg = msg;
+                      }
+
     Thread t_RequisitionSever;
+    
 
     {
         t_RequisitionSever = new Thread(this, "RequisitionSever");
         t_RequisitionSever.start();
     }
     public void run()
-    {
+    {   
+        System.out.println("Started requisition");
         int i = 0;
+        Global.input=1;
         while(i< (Global.input * 2))
         {
          i++;
         Message message = new Message();
         ByteMessage byteMessage = new ByteMessage();
         Response response = new Response();
-
-            byteMessage = Global.buff5.receive();
-            String PlaceRequisition = new String(byteMessage.messageName);
-            String RequisitionOrder = new String(byteMessage.messageContent);
-
-            System.out.println("AT RequisitionSever: " +  PlaceRequisition + " & "+ RequisitionOrder);
-            response.status = ("Reply form a Receiver: Status Success").getBytes();
-            Global.buff5.reply(response);
+        message.messageContent=this.msg;
+        System.out.println("Message content received on Requisition server is: " +message.messageContent+"\n\n");
+            //byteMessage = Global.buff5.receive();
+           // System.out.println("bm "+byteMessage);
+           // String PlaceRequisition = new String(byteMessage.messageName);
+            //String RequisitionOrder = new String(byteMessage.messageContent);
+            String RequisitionOrder = new String(message.messageContent);
+            //System.out.println("AT RequisitionSever: " +  PlaceRequisition + " & "+ RequisitionOrder);
+            System.out.println("AT RequisitionSever: " +  RequisitionOrder);
+           // response.status = ("Reply form a Receiver: Status Success").getBytes();
+           // Global.buff5.reply(response);
         }
     }
 }
@@ -138,18 +149,19 @@ public class ServerfourApplication {
                         }
                          }
     
-    @PostMapping("/receive")
+    @PostMapping("/sendmessage")
     public String insert(@RequestBody String ob)
           {
+              System.out.println("post received");
               try{
             Global.input =1;    //programmer will decide input
-            RequisitionSever requisitionSever = new RequisitionSever();
+            RequisitionSever requisitionSever = new RequisitionSever(ob);
             requisitionSever.t_RequisitionSever.join();
                          }catch(InterruptedException e)
                          {
                                  System.out.println("InterruptedException caught");
                              }
-                     return "insert fxn completed";
+                     return "Reply form a Receiver: Status Success";
                    }
 
 
