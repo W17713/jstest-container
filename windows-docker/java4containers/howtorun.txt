@@ -1,0 +1,38 @@
+STEP 1:
+In windows the ports used may not be available for use or may not be allowed to be used 
+To check available ports that can be used in place of the ports listed under STEP 3, open 
+command prompt and run below commands to make sure below ports can be used
+netstat 
+netsh firewall show state
+
+STEP 2:
+run docker images with below command
+docker-compose up
+
+open below in browser:
+localhost:443/customer
+localhost:3000/securesender
+localhost:8080/securereceiver
+localhost:80/requisition
+
+
+STEP 3:
+NOTE: If package is not built yet, build packages for the four servers with maven
+  
+build package for the four different servers:
+cd $DIR_NAME
+./mvnw package
+
+
+step 4:
+change to parent directory and run docker compose:
+cd ..
+docker-compose up
+
+
+STEP 5:
+open below in browser:
+localhost:443/customer
+localhost:3000/securesender
+localhost:8080/securereceiver
+localhost:80/requisition
