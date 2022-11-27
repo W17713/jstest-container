@@ -1,0 +1,9 @@
+mkdir classes
+
+javac -d classes secureReceiver.java 
+
+vi manifest.txt //set Main-Class: Mainclassname
+
+jar cfm secReceiver.jar manifest.txt .
+
+java -jar secReceiver.jar
