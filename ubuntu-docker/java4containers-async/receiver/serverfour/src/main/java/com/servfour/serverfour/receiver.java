@@ -32,18 +32,20 @@ public class receiver {
                          }
     
     @PostMapping("/sendmessage")
-    public String insert(@RequestBody String ob)
+    public String insert(@RequestBody Message ob)
           {
               try{
-                KeyGenerator keygen = KeyGenerator.getInstance("DES");
-                SecretKey secretKey = keygen.generateKey();
+                //KeyGenerator keygen = KeyGenerator.getInstance("DES");
+                //SecretKey secretKey = keygen.generateKey();
+                
+                //SecretKey secretKey = ob.secretKey;
+
+                //KeyPairGenerator kpg = KeyPairGenerator.getInstance("DSA");
+                //kpg.initialize(512); // 512 is the key size.
         
-                KeyPairGenerator kpg = KeyPairGenerator.getInstance("DSA");
-                kpg.initialize(512); // 512 is the key size.
-        
-                KeyPair kp = kpg.generateKeyPair();
-                PublicKey publicKey = kp.getPublic();
-                PrivateKey privateKey = kp.getPrivate();
+                //KeyPair kp = kpg.generateKeyPair();
+                //PublicKey publicKey = kp.getPublic();
+                //PrivateKey privateKey = kp.getPrivate();
         
                //Parameters
                 Global.input =10;    //programmer will decide input
@@ -56,15 +58,17 @@ public class receiver {
         
                 //SecureReceiverConnector.aSecureReceiverConnector();
         
-                PublicKeyRepository publicKeyRepository = new PublicKeyRepository(publicKey);
-                ReceiverComponent receiverComponent = new ReceiverComponent(secretKey);
+                //PublicKeyRepository publicKeyRepository = new PublicKeyRepository(publicKey);
+               // ReceiverComponent receiverComponent = new ReceiverComponent(secretKey);
+
+               ReceiverComponent receiverComponent = new ReceiverComponent(ob);
                 //senderComponent.t_senderComponent.join();
                 //SecureSenderConnector.t_SecuritySenderCoordinator.join();
                 //SecureSenderConnector.t_AsynchronousMCSender.join();
                 //SecureReceiverConnector.t_SecurityReceiverCoordinator.join();
                 //SecureReceiverConnector.t_AsynchronousMCReceiver.join();
                 receiverComponent.t_receiverComponent.join();
-                publicKeyRepository.t_PublicKeyRepository.join();
+                //publicKeyRepository.t_PublicKeyRepository.join();
                          }catch(InterruptedException e)
                          {
                                  System.out.println("InterruptedException caught");
@@ -126,7 +130,7 @@ class Message {
     String userRole=null;
     PrivateKey privateKey = null;
 }
-
+/*
 class MessageQueue { //Message Queue using Message class
 
     private int maxCount;
@@ -181,22 +185,22 @@ class MessageQueue { //Message Queue using Message class
             notify();
         return message;
     }*/
-    public Message get(StringMessage msg) {
+    /*public Message get(Message msg) {
         Message message;
         message = new Message();
-        byte[] decodedSecretKey = Base64.getDecoder().decode(msg.secretKey);
-        byte[] decodedPrivateKey = Base64.getDecoder().decode(msg.privateKey);
-        SecretKey secretKey = new SecretKeySpec(decodedSecretKey, 0, decodedKey.length, "AES"); 
-        SecretKey privateKey = new SecretKeySpec(decodedPrivateKey, 0, decodedKey.length, "AES"); 
+        //byte[] decodedSecretKey = Base64.getDecoder().decode(msg.secretKey);
+        //byte[] decodedPrivateKey = Base64.getDecoder().decode(msg.privateKey);
+        //SecretKey secretKey = new SecretKeySpec(decodedSecretKey, 0, decodedKey.length, "AES"); 
+        //SecretKey privateKey = new SecretKeySpec(decodedPrivateKey, 0, decodedKey.length, "AES"); 
 
-        message.messageName = message.messageName;
-        message.messageContent = message.messageContent;
+        message.messageName = msg.messageName;
+        message.messageContent = msg.messageContent;
 
-        message.secretKey = message.secretKey;
-        message.privateKey = message.privateKey;
-        message.senderID = message.senderID;
-        message.userRole = message.userRole;
-        /*
+        message.secretKey = msg.secretKey;
+        message.privateKey = msg.privateKey;
+        message.senderID = msg.senderID;
+        message.userRole = msg.userRole;
+        
         while (messageCount == 0) {
             try {
                 wait();
@@ -208,9 +212,58 @@ class MessageQueue { //Message Queue using Message class
         bottom = (bottom + 1) % maxCount; // to fetch next item from
         --messageCount;
         if (messageCount == maxCount - 1)
-            notify();*/
+            notify();
         return message;
     }
+}*/
+
+class MBRSecretKey {  //Message Buffer and Response using KeyRequestMessage class, return secret key
+
+    private SecretKey key;
+    private KeyRequestMessage keyRequestMessage;
+    private boolean messageBufferFull = false;
+    private boolean responseBufferFull = false;
+
+        synchronized SecretKey send(KeyRequestMessage keyRequestMessage)
+            {
+                 this.keyRequestMessage = keyRequestMessage;
+                 messageBufferFull = true;
+                 notify();
+                 while(responseBufferFull==false)
+                    try
+                      {
+                             wait();
+                                 }
+                                  catch(InterruptedException e)
+                                    {
+                                      System.out.println("InterruptedException caught");
+                                      }
+                    responseBufferFull = false;
+                    return key;
+               }
+
+            synchronized KeyRequestMessage receive()
+                {
+                            while(messageBufferFull==false)
+                                            try
+                                                        {
+                                                                            wait();
+                                                                                        }
+                              catch(InterruptedException e)
+                                    {
+                                       System.out.println("InterruptedException caught");
+                                       }
+                              messageBufferFull = false;
+                              notify();
+                              return keyRequestMessage;
+                              }
+
+                 synchronized void reply(SecretKey secretKey)
+                     {
+                                 this.key = secretKey;
+                                         responseBufferFull = true;
+                                                 notify();
+                                                     }
 }
 
 class KeyRequestMessage {
@@ -223,23 +276,23 @@ class setSize{
    public void setSize(int a,int b) {
 
         //Global.senderComponentQueue = new MessageQueue(b);
-        Global.q2 = new ByteMessageQueue(b);
-        Global.q3 = new ByteMessageQueue(b);
-        Global.q4 = new ByteMessageQueue(b);
-        Global.receiverComponentQueue = new MessageQueue(b);
+        //Global.q2 = new ByteMessageQueue(b);
+        //Global.q3 = new ByteMessageQueue(b);
+        //Global.q4 = new ByteMessageQueue(b);
+       // Global.receiverComponentQueue = new MessageQueue(b);
     }
 }
 
 class Global{
 
-    public static MessageQueue senderComponentQueue;
-    public static ByteMessageQueue q2;
-    public static ByteMessageQueue q3;
-    public static ByteMessageQueue q4;
-    public static MessageQueue receiverComponentQueue;
+   // public static MessageQueue senderComponentQueue;
+   // public static ByteMessageQueue q2;
+   // public static ByteMessageQueue q3;
+   // public static ByteMessageQueue q4;
+    //public static MessageQueue receiverComponentQueue;
 
     public static MBRSecretKey mbrSecretKey = new MBRSecretKey();
-   public static MBRPublicKey mbrPublicKey = new MBRPublicKey();
+    //public static MBRPublicKey mbrPublicKey = new MBRPublicKey();
     public static int input;
     public static int queueSize;
 }
@@ -250,11 +303,11 @@ class ReceiverComponent implements Runnable
     Thread t_receiverComponent;
 
     SecretKey secretKey;
-    public ReceiverComponent(SecretKey sk)
+    public ReceiverComponent(Message message)
     {
         t_receiverComponent = new Thread(this, "ReceiverComponent");
         t_receiverComponent.start();
-        this.secretKey = sk;
+        this.secretKey = message.secretKey;
     }
 
     public void run()
@@ -276,7 +329,7 @@ class ReceiverComponent implements Runnable
             }
 
 
-            message = Global.receiverComponentQueue.get();
+            //message = Global.receiverComponentQueue.get();
             System.out.println("ReceiverComponent: messageName = " + message.messageName);
             System.out.println("ReceiverComponent: messageContent = " + message.messageContent + "\n");
 

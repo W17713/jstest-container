@@ -9,7 +9,12 @@ import org.json.JSONObject;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.http.ResponseEntity; 
+import org.springframework.http.ResponseEntity;
+
+import org.springframework.http.converter.AbstractHttpMessageConverter; 
+//import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
+import org.codehaus.jackson.map.ObjectMapper;
+
 
 import java.security.*;
 import javax.crypto.KeyGenerator;
@@ -20,7 +25,7 @@ import java.util.*;
 @SpringBootApplication
 @RestController
 public class sender {
-   @GetMapping("/customer") 
+   @GetMapping("/sender") 
    public String home() {
                       try{
                         KeyGenerator keygen = KeyGenerator.getInstance("DES");
@@ -44,7 +49,7 @@ public class sender {
                 
                         //SecureReceiverConnector.aSecureReceiverConnector();
                 
-                        PublicKeyRepository publicKeyRepository = new PublicKeyRepository(publicKey);
+                        //PublicKeyRepository publicKeyRepository = new PublicKeyRepository(publicKey);
                         //ReceiverComponent receiverComponent = new ReceiverComponent(secretKey);
                         senderComponent.t_senderComponent.join();
                         //SecureSenderConnector.t_SecuritySenderCoordinator.join();
@@ -52,7 +57,7 @@ public class sender {
                         //SecureReceiverConnector.t_SecurityReceiverCoordinator.join();
                         //SecureReceiverConnector.t_AsynchronousMCReceiver.join();
                         //receiverComponent.t_receiverComponent.join();
-                        publicKeyRepository.t_PublicKeyRepository.join();
+                        //publicKeyRepository.t_PublicKeyRepository.join();
                         return "This is the customer server";
                         }catch(Exception e){
                             String errorMessage = null;
@@ -154,12 +159,12 @@ class MessageQueue { //Message Queue using Message class
         String encprivateKey = Base64.getEncoder().encodeToString(message.privateKey.getEncoded());
 
         JSONObject msgobj = new JSONObject();
-        obj.put("messageName", message.messageName);
-        obj.put("messageContent", message.messageContent);
-        obj.put("secretKey", encsecretKey);
-        obj.put("privateKey", encprivateKey);
-        obj.put("senderID", message.senderID);
-        obj.put("userRole", message.userRole);
+        msgobj.put("messageName", message.messageName);
+        msgobj.put("messageContent", message.messageContent);
+        msgobj.put("secretKey", encsecretKey);
+        msgobj.put("privateKey", encprivateKey);
+        msgobj.put("senderID", message.senderID);
+        msgobj.put("userRole", message.userRole);
 
 
         up = (up + 1) % maxCount; // to place next item in
@@ -168,9 +173,14 @@ class MessageQueue { //Message Queue using Message class
             //notify(); //change notify function to http post function
             try{
                 RestTemplate resttemp = new RestTemplate();
+                //MappingJacksonHttpMessageConverter converter = new MappingJacksonHttpMessageConverter();
+                AbstractHttpMessageConverter converter = new AbstractHttpMessageConverter();
+                converter.setObjectMapper(new ObjectMapper());
+                resttemp.getMessageConverters().add(converter);
                 String baseurl = "http://127.0.0.1:3000/sendmessage";
                 URI uri = new URI(baseurl);
                 ResponseEntity<String> result = resttemp.postForEntity(uri,msgobj,String.class);
+                String rsp = new String();
                 rsp=result.getBody();
                 System.out.println(rsp);
                 int Status = result.getStatusCodeValue();
@@ -203,6 +213,70 @@ class MessageQueue { //Message Queue using Message class
     }
 }
 
+class ByteMessage {
+        byte[] messageName = null;
+        byte[] messageContent = null;
+
+        byte[] senderID=null;
+        byte[] userRole=null;
+        byte[] signature = null;
+        byte[] hashedValue = null;
+
+}
+
+class ByteMessageQueue {
+
+        private int maxCount;
+        private int messageCount = 0;
+        private ByteMessage[] buffer;
+        private int bottom = 0, up = 0;
+
+        ByteMessageQueue(int queueSize) {
+                                    this.maxCount=queueSize;
+                                            buffer = new ByteMessage[queueSize];
+                                                    for (int i = 0; i < maxCount; i++){
+                                                                    buffer[i] = new ByteMessage();
+                                                                            }
+                                                                                }
+                        public synchronized void put(ByteMessage byteMessage) {
+                                    while (messageCount == maxCount) {
+                                                    try {
+                                                                        wait();
+                                                                                    } catch (InterruptedException e) {
+                                                                                                        e.printStackTrace();
+                                                                                                                    }
+                                                                                                                            }
+                         messageCount++;
+
+                                 buffer[up].messageName = byteMessage.messageName; // place message in buffer;
+                                         buffer[up].messageContent = byteMessage.messageContent;
+
+                                                 buffer[up].senderID = byteMessage.senderID;
+                                                         buffer[up].userRole = byteMessage.userRole;
+                                                                 buffer[up].signature = byteMessage.signature;
+                                                                         buffer[up].hashedValue = byteMessage.hashedValue;
+                         up = (up + 1) % maxCount; // to place next item in
+
+                                 if (messageCount == 1)
+                                                 notify();
+                                                     }
+                         public synchronized ByteMessage get() {
+                                     ByteMessage byteMessage;
+                                             while (messageCount == 0)
+                                                             try {
+                                                                                 wait();
+                                                                                             } catch (InterruptedException e) {
+                                                                                                                 e.printStackTrace();
+                                                                                                                             }
+                                                                          byteMessage = buffer[bottom];
+                                                                                                                                             bottom = (bottom + 1) % maxCount;
+                                                                                                                                                     --messageCount;
+                                                                                                                                                             if (messageCount == maxCount - 1)
+                                                                                                                                                                             notify();
+                                                                                                                                                                                     return byteMessage;
+                                                                                                                                                                                         }
+}
+/*
 class setSize{
     Global global = new Global();
 
@@ -214,7 +288,7 @@ class setSize{
         Global.q4 = new ByteMessageQueue(b);
         //Global.receiverComponentQueue = new MessageQueue(b);
     }
-}
+}*/
 
 class Global{
 
@@ -224,12 +298,24 @@ class Global{
     public static ByteMessageQueue q4;
     //public static MessageQueue receiverComponentQueue;
 
-    public static MBRSecretKey mbrSecretKey = new MBRSecretKey();
-    public static MBRPublicKey mbrPublicKey = new MBRPublicKey();
+    //public static MBRSecretKey mbrSecretKey = new MBRSecretKey();
+    //public static MBRPublicKey mbrPublicKey = new MBRPublicKey();
     public static int input;
     public static int queueSize;
 }
 
+ class setSize{
+        Global global = new Global();
+     
+        public void setSize(int a,int b) {
+       
+               Global.senderComponentQueue = new MessageQueue(b);
+               Global.q2 = new ByteMessageQueue(b);
+               // Global.q3 = new ByteMessageQueue(b);
+               //Global.q4 = new ByteMessageQueue(b);
+               //Global.receiverComponentQueue = new MessageQueue(b);
+           }
+        }
 
 class SenderComponent  implements Runnable {
     Thread t_senderComponent;

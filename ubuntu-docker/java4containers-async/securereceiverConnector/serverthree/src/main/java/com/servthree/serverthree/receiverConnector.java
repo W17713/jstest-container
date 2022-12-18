@@ -8,6 +8,8 @@ import org.json.JSONObject;
 
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.ResponseEntity; 
 
@@ -16,13 +18,20 @@ import java.util.*;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 
+import javax.crypto.spec.SecretKeySpec;
+import java.security.KeyFactory;
+import java.security.spec.EncodedKeySpec;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.InvalidKeySpecException;
+
+
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 
 
 @RestController
 @SpringBootApplication
-public class ServerthreeApplication {
+public class receiverConnector {
      @GetMapping("/securereceiver")
      public String home(){
 
@@ -32,7 +41,7 @@ public class ServerthreeApplication {
      //Handling post request
      //@PostMapping(path="/sendmessage",consumes = "any", produces = "application/octet-stream")
      @PostMapping("/sendmessage")
-     public String insert(@RequestBody String ob)
+     public String insert(@RequestBody Message ob)
      //public String insert(@RequestBody Map<String, Object> ob)
           {
             try{
@@ -48,7 +57,7 @@ public class ServerthreeApplication {
                    }
 
 	public static void main(String[] args) {
-		SpringApplication.run(ServerthreeApplication.class, args);
+		SpringApplication.run(receiverConnector.class, args);
 	}
 
 }
@@ -62,6 +71,18 @@ class Message {
     String userRole=null;
     PrivateKey privateKey = null;
 }
+
+class StringMessage {
+    String messageName = null;
+    String messageContent = null;
+         
+    String secretKey = null;
+    String senderID=null;
+    String userRole=null;
+    String privateKey = null;
+     }
+
+
 
 class MessageQueue { //Message Queue using Message class
 
@@ -77,7 +98,8 @@ class MessageQueue { //Message Queue using Message class
             buffer[i] = new Message();
         }
     }
-    public void put(StringMessage message) {
+
+    public void put(Message message) {
         while (messageCount == maxCount) {
             try {
                 wait();
@@ -99,12 +121,12 @@ class MessageQueue { //Message Queue using Message class
         //String encprivateKey = Base64.getEncoder().encodeToString(message.privateKey.getEncoded());
 
         JSONObject msgobj = new JSONObject();
-        obj.put("messageName", message.messageName);
-        obj.put("messageContent", message.messageContent);
-        obj.put("hashedValue", message.hashedValue);
-        obj.put("signature", message.signature);
-        obj.put("senderID", message.senderID);
-        obj.put("userRole", message.userRole);
+        msgobj.put("messageName", message.messageName);
+        msgobj.put("messageContent", message.messageContent);
+       // msgobj.put("hashedValue", message.hashedValue);
+        //msgobj.put("signature", message.signature);
+        msgobj.put("senderID", message.senderID);
+        msgobj.put("userRole", message.userRole);
 
 
         up = (up + 1) % maxCount; // to place next item in
@@ -116,6 +138,7 @@ class MessageQueue { //Message Queue using Message class
                 String baseurl = "http://127.0.0.1:80/sendmessage";
                 URI uri = new URI(baseurl);
                 ResponseEntity<String> result = resttemp.postForEntity(uri,msgobj,String.class);
+                String rsp = new String();
                 rsp=result.getBody();
                 System.out.println(rsp);
                 int Status = result.getStatusCodeValue();
@@ -130,11 +153,23 @@ class MessageQueue { //Message Queue using Message class
         }
     }
 
-    public Message get(StringMessage msg) {
+    public StringMessage get(Message msg) {
 
-        Message message;
-        message = new Message();
-      
+        StringMessage message;
+        message = new StringMessage();
+
+        String secretKey = Base64.getEncoder().encodeToString(msg.secretKey.getEncoded());
+        String privateKey = Base64.getEncoder().encodeToString(msg.privateKey.getEncoded());
+         
+        message.messageName = msg.messageName;
+        message.messageContent = msg.messageContent;
+         
+        message.secretKey = secretKey;
+        message.privateKey = privateKey;
+        message.senderID = msg.senderID;
+        message.userRole = msg.userRole;
+
+        /*
         message.messageName = msg.messageName;
         message.messageContent = msg.messageContent;
 
@@ -142,11 +177,21 @@ class MessageQueue { //Message Queue using Message class
         message.privateKey = msg.hashedValue;
         message.senderID = msg.senderID;
         message.userRole = msg.userRole;
-
+        */
         return message;
     }
 }
 
+//added to store byteMessage as strings
+class StringBMessage {
+         String messageName = null;
+         String messageContent = null;
+     
+         String senderID=null;
+         String userRole=null;
+         String signature = null;
+         String hashedValue = null;
+    }
 
 class ByteMessage {
     byte[] messageName = null;
@@ -327,7 +372,8 @@ class Global{
 
    // public static MessageQueue senderComponentQueue;
     //public static ByteMessageQueue q2;
-    public static MessageQueue q3;
+    //public static ByteMessageQueue q3;
+    //public static ByteMessageQueue q4;
     public static ByteMessageQueue q4;
     public static MessageQueue receiverComponentQueue;
 
@@ -480,7 +526,7 @@ class SecureReceiverConnector {
     static hashValueVerification hsv;
     static MyAuthenticator ath;
     static MyAuthorization atr;
-    public static void aSecureReceiverConnector(StringMessage msg){
+    public static void aSecureReceiverConnector(Message msg){
         try {
 
             ed = new EncryptionDecryptor();
@@ -521,7 +567,7 @@ class AsynchronousMCReceiver implements Runnable {
         int i = 0;
         ByteMessage byteMessage = new ByteMessage();
         //add Message object
-        StringMessage message = new StringMessage();
+        StringBMessage message = new StringBMessage();
 
         while(i<Global.input)
         {
@@ -530,15 +576,15 @@ class AsynchronousMCReceiver implements Runnable {
             byteMessage = Global.q4.get(); //added
 
             //convert byteMessage to stringMessage for posting
-            message.messageContent = new String(byteMessage.messageContent);
-            message.messageName = new String(byteMessage.messageName);
-            message.senderID = new String(byteMessage.senderID);
-            message.signature = new String(byteMessage.signature);
-            message.hashedValue = new String(byteMessage.hashedValue);
-            message.userRole = new String(byteMessage.userRole);
+            //message.messageContent = new String(byteMessage.messageContent);
+            //message.messageName = new String(byteMessage.messageName);
+            //message.senderID = new String(byteMessage.senderID);
+            //message.signature = new String(byteMessage.signature);
+            //message.hashedValue = new String(byteMessage.hashedValue);
+            //message.userRole = new String(byteMessage.userRole);
 
-            //Global.q4.put(byteMessage);
-            Global.q4.put(message);
+            Global.q4.put(byteMessage);
+           // Global.q4.put(message);
         }
 
     }
@@ -581,8 +627,8 @@ class PublicKeyRepository implements Runnable{
 class SecurityReceiverCoordinator implements Runnable
 {
     //added
-    StringMessage msg = new StringMessage();
-    public SecurityReceiverCoordinator(StringMessage msg){
+    Message msg = new Message();
+    public SecurityReceiverCoordinator(Message msg){
                                        this.msg = msg;
                                    }
     Thread t_SecurityReceiverCoordinator;
@@ -611,13 +657,25 @@ throws Exception{
     public void run(){
         int i = 0;
         ByteMessage byteMessage = new ByteMessage();
-        Message message = new Message();
+        //StringMessage mess = new StringMessage();
+        Message message =  new Message();
         KeyRequestMessage keyRequestMessage = new KeyRequestMessage();
+
+        //added
+        //byte[] secretKeyBytes = Base64.getDecoder().decode(this.msg.secretKey);
+        //byte[] privateKeyBytes = Base64.getDecoder().decode(this.msg.privateKey);
+         
+        //SecretKey secKey = new SecretKeySpec(secretKeyBytes, 0, secretKeyBytes.length, "DES");
+
         while(i<Global.input)
         {
             i++;
             try {
+               // KeyFactory keyFactory = KeyFactory.getInstance("DSA");
+               // EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
+               // PrivateKey priKey = keyFactory.generatePrivate(privateKeySpec);
 
+                //byteMessage = Global.q4.get();
                 byteMessage = Global.q4.get();
                 
 

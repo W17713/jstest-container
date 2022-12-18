@@ -1,8 +1,7 @@
 com/servfour/serverfour/Message.class
-com/servfour/serverfour/ServerfourApplication.class
-com/servfour/serverfour/ByteMessage.class
-com/servfour/serverfour/RequisitionSever.class
-com/servone/serverone/details/Details.class
-com/servfour/serverfour/MBR.class
+com/servfour/serverfour/MBRSecretKey.class
+com/servfour/serverfour/receiver.class
+com/servfour/serverfour/ReceiverComponent.class
+com/servfour/serverfour/KeyRequestMessage.class
 com/servfour/serverfour/Global.class
-com/servfour/serverfour/Response.class
+com/servfour/serverfour/setSize.class

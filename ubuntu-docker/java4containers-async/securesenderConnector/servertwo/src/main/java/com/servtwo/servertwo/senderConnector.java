@@ -8,6 +8,8 @@ import org.json.JSONObject;
 
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.ResponseEntity; 
 
@@ -16,26 +18,31 @@ import java.util.*;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 
+import javax.crypto.spec.SecretKeySpec;
+import java.security.KeyFactory;
+import java.security.spec.EncodedKeySpec;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.InvalidKeySpecException;
+
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 
 @RestController
 @SpringBootApplication
-public class ServertwoApplication {
+public class senderConnector {
           @GetMapping("/securesender")
           public String home(){
           
                    return "This is the secure sender server";
                    }
           
-               //Handling post request
-               //@PostMapping(path="/sendmessage",consumes = "any", produces = "application/octet-stream")
-               @PostMapping("/sendmessage")
-               public String insert(@RequestBody String ob)
+          
+          @PostMapping("/sendmessage")
+          public String insert(@RequestBody Message ob)
                     {
                         try{
                             SecureSenderConnector.aSecureSenderConnector(ob);
-                            senderComponent.t_senderComponent.join();
+                            //senderComponent.t_senderComponent.join();
                             SecureSenderConnector.t_SecuritySenderCoordinator.join();
                             SecureSenderConnector.t_AsynchronousMCSender.join();
                         }catch(InterruptedException e)
@@ -45,8 +52,8 @@ public class ServertwoApplication {
                           return "response";
                     }
  
-     public static void main(String[] args) {
-             SpringApplication.run(ServertwoApplication.class, args);
+        public static void main(String[] args) {
+             SpringApplication.run(senderConnector.class, args);
          }
         }
 
@@ -59,6 +66,16 @@ class Message {
     String userRole=null;
     PrivateKey privateKey = null;
 }
+
+class StringMessage {
+           String messageName = null;
+           String messageContent = null;
+         
+           String secretKey = null;
+           String senderID=null;
+           String userRole=null;
+           String privateKey = null;
+             }
 
 class MessageQueue { //Message Queue using Message class
 
@@ -74,7 +91,7 @@ class MessageQueue { //Message Queue using Message class
             buffer[i] = new Message();
         }
     }
-    public void put(StringMessage message) {
+    public void put(StringBMessage message) {
         while (messageCount == maxCount) {
             try {
                 wait();
@@ -96,12 +113,12 @@ class MessageQueue { //Message Queue using Message class
         //String encprivateKey = Base64.getEncoder().encodeToString(message.privateKey.getEncoded());
 
         JSONObject msgobj = new JSONObject();
-        obj.put("messageName", message.messageName);
-        obj.put("messageContent", message.messageContent);
-        obj.put("hashedValue", message.hashedValue);
-        obj.put("signature", message.signature);
-        obj.put("senderID", message.senderID);
-        obj.put("userRole", message.userRole);
+        msgobj.put("messageName", message.messageName);
+        msgobj.put("messageContent", message.messageContent);
+        msgobj.put("hashedValue", message.hashedValue);
+        msgobj.put("signature", message.signature);
+        msgobj.put("senderID", message.senderID);
+        msgobj.put("userRole", message.userRole);
 
 
         up = (up + 1) % maxCount; // to place next item in
@@ -113,6 +130,7 @@ class MessageQueue { //Message Queue using Message class
                 String baseurl = "http://127.0.0.1:8080/sendmessage";
                 URI uri = new URI(baseurl);
                 ResponseEntity<String> result = resttemp.postForEntity(uri,msgobj,String.class);
+                String rsp = new String();
                 rsp=result.getBody();
                 System.out.println(rsp);
                 int Status = result.getStatusCodeValue();
@@ -128,21 +146,24 @@ class MessageQueue { //Message Queue using Message class
     }
 
     //public synchronized Message get() {
-    public Message get(StringMessage msg) {
-        Message message;
-        message = new Message();
-        byte[] decodedSecretKey = Base64.getDecoder().decode(msg.secretKey);
-        byte[] decodedPrivateKey = Base64.getDecoder().decode(msg.privateKey);
-        SecretKey secretKey = new SecretKeySpec(decodedSecretKey, 0, decodedKey.length, "AES"); 
-        SecretKey privateKey = new SecretKeySpec(decodedPrivateKey, 0, decodedKey.length, "AES"); 
+    public StringMessage get(Message msg) {
+        StringMessage message;
+        message = new StringMessage();
+        //byte[] decodedSecretKey = Base64.getDecoder().decode(msg.secretKey);
+        //byte[] decodedPrivateKey = Base64.getDecoder().decode(msg.privateKey);
+        //SecretKey secretKey = new SecretKeySpec(decodedSecretKey, 0, decodedSecretKey.length, "AES"); 
+        //SecretKey privateKey = new SecretKeySpec(decodedPrivateKey, 0, decodedPrivateKey.length, "AES"); 
+        
+        String secretKey = Base64.getEncoder().encodeToString(msg.secretKey.getEncoded());
+        String privateKey = Base64.getEncoder().encodeToString(msg.privateKey.getEncoded());
 
-        message.messageName = message.messageName;
-        message.messageContent = message.messageContent;
+        message.messageName = msg.messageName;
+        message.messageContent = msg.messageContent;
 
-        message.secretKey = message.secretKey;
-        message.privateKey = message.privateKey;
-        message.senderID = message.senderID;
-        message.userRole = message.userRole;
+        message.secretKey = secretKey;
+        message.privateKey = privateKey;
+        message.senderID = msg.senderID;
+        message.userRole = msg.userRole;
         /*
         while (messageCount == 0) {
             try {
@@ -173,7 +194,7 @@ class ByteMessage {
 }
 
 //added to store byteMessage as strings
-class StringMessage {
+class StringBMessage {
     String messageName = null;
     String messageContent = null;
 
@@ -504,7 +525,7 @@ class SecureSenderConnector {
 
     static hashValueGenration hs;
 
-    static void aSecureSenderConnector(String msg){
+    static void aSecureSenderConnector(Message msg){
         try {
 
 
@@ -527,8 +548,8 @@ class SecureSenderConnector {
 
 class SecuritySenderCoordinator implements Runnable {
 
-    StringMessage msg = new StringMessage();
-    public SecuritySenderCoordinator(StringMessage msg){
+    Message msg = new Message();
+    public SecuritySenderCoordinator(Message msg){
                  this.msg = msg;
              }
 
@@ -551,33 +572,61 @@ throws Exception
     public void run()
     {
         int i=0;
-        Message message = new Message();
+        StringMessage message = new StringMessage();
         ByteMessage byteMessage = new ByteMessage();
 
+        //added
+        byte[] secretKeyBytes = Base64.getDecoder().decode(message.secretKey);
+        byte[] privateKeyBytes = Base64.getDecoder().decode(message.privateKey);
+        
+        SecretKey secKey = new SecretKeySpec(secretKeyBytes, 0, secretKeyBytes.length, "DES"); 
+        //PrivateKey priKey = new DSAPrivateKeySpec(privateKey, 0, privateKey.length, "DSA"); 
+        /*
+        try{
+            KeyFactory keyFactory = KeyFactory.getInstance("DSA");
+        try{
+        EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
+      
+        PrivateKey priKey = keyFactory.generatePrivate(privateKeySpec);
+                }catch(InvalidKeySpecException e){
+                         System.out.println("InvalidKeySpecException caught");
+                             }
+        }catch(NoSuchAlgorithmException e){
+                 System.out.println("NoSuchAlgorithmException caught");
+             }*/
+        //PrivateKey priKey = keyFactory.generatePrivate(privateKeySpec);
         while(i<Global.input)
         {
             i++;
 
             message=Global.senderComponentQueue.get(this.msg);
 
+           
             try {
+                   KeyFactory keyFactory = KeyFactory.getInstance("DSA");
+                   EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
+                   PrivateKey priKey = keyFactory.generatePrivate(privateKeySpec);
+                   
                     byteMessage.messageContent = (message.messageContent).getBytes();
                     byteMessage.messageName = (message.messageName).getBytes();
-                    byteMessage.messageContent = ee.encrypt(byteMessage.messageContent, message.secretKey);
+
+                   
+
+                    byteMessage.messageContent = ee.encrypt(byteMessage.messageContent, secKey);
                     System.out.println("Encrypted messageContent!");
 
                     byteMessage.senderID = (message.senderID).getBytes();
-                    byteMessage.senderID = ee.encrypt(byteMessage.senderID, message.secretKey);
+                    byteMessage.senderID = ee.encrypt(byteMessage.senderID, secKey);
                     System.out.println("Encrypted senderID!");
 
                     byteMessage.userRole = (message.userRole).getBytes();
-                    byteMessage.userRole = ee.encrypt(byteMessage.userRole, message.secretKey);
+                    byteMessage.userRole = ee.encrypt(byteMessage.userRole, secKey);
                     System.out.println("Encrypted userRole!");
 
                     byteMessage.hashedValue = hs.generate(byteMessage.messageContent);
                     System.out.println("Hashed value! " + byteMessage.hashedValue);
 
-                    byteMessage.signature = dss.sign(byteMessage.messageContent, message.privateKey);
+                    byteMessage.signature = dss.sign(byteMessage.messageContent, priKey);
                     System.out.println("Signed messageContent! " + byteMessage.signature);
 
 
@@ -605,7 +654,7 @@ class AsynchronousMCSender implements Runnable {
         int i = 0;
         ByteMessage byteMessage = new ByteMessage();
         //add Message object
-        StringMessage message = new StringMessage();
+        StringBMessage message = new StringBMessage();
         while(i<Global.input)
         {
             i++;
