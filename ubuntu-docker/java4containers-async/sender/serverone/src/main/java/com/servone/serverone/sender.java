@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 
 import org.springframework.http.converter.AbstractHttpMessageConverter; 
 //import org.springframework.http.converter.json.MappingJacksonHttpMessageConverter;
+import org.springframework.ws.transport.http.HttpUrlConnection;
 import org.codehaus.jackson.map.ObjectMapper;
 
 
@@ -28,15 +29,15 @@ public class sender {
    @GetMapping("/sender") 
    public String home() {
                       try{
-                        KeyGenerator keygen = KeyGenerator.getInstance("DES");
-                        SecretKey secretKey = keygen.generateKey();
+                        //KeyGenerator keygen = KeyGenerator.getInstance("DES");
+                        //SecretKey secretKey = keygen.generateKey();
                 
-                        KeyPairGenerator kpg = KeyPairGenerator.getInstance("DSA");
-                        kpg.initialize(512); // 512 is the key size.
+                        //KeyPairGenerator kpg = KeyPairGenerator.getInstance("DSA");
+                        //kpg.initialize(512); // 512 is the key size.
                 
-                        KeyPair kp = kpg.generateKeyPair();
-                        PublicKey publicKey = kp.getPublic();
-                        PrivateKey privateKey = kp.getPrivate();
+                        //KeyPair kp = kpg.generateKeyPair();
+                        //PublicKey publicKey = kp.getPublic();
+                        //PrivateKey privateKey = kp.getPrivate();
                 
                        //Parameters
                         Global.input =10;    //programmer will decide input
@@ -44,7 +45,14 @@ public class sender {
                         Global.queueSize=25;  //program will decide queueSize
                         setSize setside= new setSize();
                         setside.setSize(Global.input,Global.queueSize);
-                        SenderComponent senderComponent = new SenderComponent(secretKey, privateKey);
+
+                        //Request for keys
+                        KeyRequest kr = new KeyRequest();
+                        kr.messageName = "requestkeys";
+                        KeyMessageRequest kmr = new KeyMessageRequest();
+                        Keys keys = new Keys();
+                        keys  = kmr.post('http://127.0.0.1:3000/requestkey',kr);
+                        SenderComponent senderComponent = new SenderComponent(keys.secretKey, keys.privateKey);
                         //SecureSenderConnector.aSecureSenderConnector();
                 
                         //SecureReceiverConnector.aSecureReceiverConnector();
@@ -121,6 +129,46 @@ class Message {
     PrivateKey privateKey = null;
 }
 
+class Keys {
+    String secretKey = null;
+    String publicKey = null;
+    string privateKey = null;
+}
+
+class KeyRequest {
+    String messageName = null;
+}
+
+class KeyMessageRequest{
+    public Keys post(String posturl, KeyRequest krObj){
+        Gson gson = new Gson(); 
+        URL url = new URL (posturl);
+        HttpURLConnection con = (HttpURLConnection)url.openConnection();
+        con.setRequestMethod("POST");
+        con.setRequestProperty("Content-Type", "application/json");
+        con.setRequestProperty("Accept", "application/json");
+        con.setDoOutput(true);
+        String jsonInputString = gson.toJson(krObj);
+        try(OutputStream os = con.getOutputStream()) {
+            byte[] input = jsonInputString.getBytes("utf-8");
+            os.write(input, 0, input.length);			
+        }
+
+        try(BufferedReader br = new BufferedReader(
+            new InputStreamReader(con.getInputStream(), "utf-8"))) {
+            StringBuilder response = new StringBuilder();
+            String responseLine = null;
+            while ((responseLine = br.readLine()) != null) {
+                response.append(responseLine.trim());
+                    }
+            //rspString = response.toString();
+            msg = gson.fromJson(response, KeyRequest);
+            System.out.println(msg);
+            return msg;
+            }
+    }
+}
+
 class MessageQueue { //Message Queue using Message class
 
     private int maxCount;
@@ -194,6 +242,7 @@ class MessageQueue { //Message Queue using Message class
                  }
         }
     }
+
 
     public synchronized Message get() {
         Message message;
