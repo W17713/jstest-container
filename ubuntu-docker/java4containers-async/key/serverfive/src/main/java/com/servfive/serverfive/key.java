@@ -22,7 +22,7 @@ import com.google.gson.GsonBuilder;
 
 @SpringBootApplication
 @RestController
-public class receiver {
+public class key {
    @GetMapping("/key") 
    public String home() {
                       try{
@@ -36,10 +36,14 @@ public class receiver {
                         PublicKey publicKey = kp.getPublic();
                         PrivateKey privateKey = kp.getPrivate();
 
+                        String encsecretKey = Base64.getEncoder().encodeToString(secretKey.getEncoded());
+                        String encpublicKey = Base64.getEncoder().encodeToString(publicKey.getEncoded());
+                        String encprivateKey = Base64.getEncoder().encodeToString(privateKey.getEncoded());
+
                         private Gson gson = new Gson();
 
-                        Keys keys = new Keys(secretKey,publicKey,privateKey);
-                        public String keysJsonString = this.gson.toJson(keys);
+                        Keys keys = new Keys(encsecretKey,encpublicKey,encprivateKey);
+                        public String keysJsonString = gson.toJson(keys);
                 
                         //convert keys to string and return
         
@@ -58,75 +62,25 @@ public class receiver {
     public String insert(@RequestBody String ob)
           {
               try{
-                /*KeyGenerator keygen = KeyGenerator.getInstance("DES");
-                SecretKey secretKey = keygen.generateKey();
-        
-                KeyPairGenerator kpg = KeyPairGenerator.getInstance("DSA");
-                kpg.initialize(512); // 512 is the key size.
-        
-                KeyPair kp = kpg.generateKeyPair();
-                PublicKey publicKey = kp.getPublic();
-                PrivateKey privateKey = kp.getPrivate();
-        
-                //convert keys to string and return
-
-                PublicKeyRepository publicKeyRepository = new PublicKeyRepository(publicKey);
-                ReceiverComponent receiverComponent = new ReceiverComponent(secretKey);*/
                 if (ob.messageName=='requestkeys'){
                     return keysJsonString;
+                }else{
+                    return "Request not received. Check request name";
                 }
                     
-                         }catch(InterruptedException e)
+                         }catch(Exception e)
                          {
-                                 System.out.println("InterruptedException caught");
+                                 System.out.println("Exception caught");
                              }
-                     return "Reply form a Receiver: Status Success";
                    }
 
 
 	public static void main(String[] args) {
-		SpringApplication.run(receiver.class, args);
+		SpringApplication.run(key.class, args);
 	}
 
 }
-/*
-public class receiver{ //Main
 
-public static void main(String args[]) throws Exception {
-
-        KeyGenerator keygen = KeyGenerator.getInstance("DES");
-        SecretKey secretKey = keygen.generateKey();
-
-        KeyPairGenerator kpg = KeyPairGenerator.getInstance("DSA");
-        kpg.initialize(512); // 512 is the key size.
-
-        KeyPair kp = kpg.generateKeyPair();
-        PublicKey publicKey = kp.getPublic();
-        PrivateKey privateKey = kp.getPrivate();
-
-       //Parameters
-        Global.input =10;    //programmer will decide input
-
-        Global.queueSize=25;  //program will decide queueSize
-        setSize setside= new setSize();
-        setside.setSize(Global.input,Global.queueSize);
-        //SenderComponent senderComponent = new SenderComponent(secretKey, privateKey);
-        //SecureSenderConnector.aSecureSenderConnector();
-
-        //SecureReceiverConnector.aSecureReceiverConnector();
-
-        PublicKeyRepository publicKeyRepository = new PublicKeyRepository(publicKey);
-        ReceiverComponent receiverComponent = new ReceiverComponent(secretKey);
-        //senderComponent.t_senderComponent.join();
-        //SecureSenderConnector.t_SecuritySenderCoordinator.join();
-        //SecureSenderConnector.t_AsynchronousMCSender.join();
-        //SecureReceiverConnector.t_SecurityReceiverCoordinator.join();
-        //SecureReceiverConnector.t_AsynchronousMCReceiver.join();
-        receiverComponent.t_receiverComponent.join();
-        publicKeyRepository.t_PublicKeyRepository.join();
-
-}
-}*/
 
 class Global{
     public static MessageQueue senderComponentQueue;
@@ -141,10 +95,10 @@ class Global{
     public static int queueSize;
 }
 
-public class Keys {
+class Keys {
     String secretKey = null;
     String publicKey = null;
-    string privateKey = null;
+    String privateKey = null;
 }
 
 class Message {
@@ -247,58 +201,17 @@ class KeyRequestMessage {
     String messageName = null;
 }
 
-class setSize{
+/*class setSize{
     Global global = new Global();
 
    public void setSize(int a,int b) {
 
-        //Global.senderComponentQueue = new MessageQueue(b);
+        Global.senderComponentQueue = new MessageQueue(b);
         Global.q2 = new ByteMessageQueue(b);
         Global.q3 = new ByteMessageQueue(b);
         Global.q4 = new ByteMessageQueue(b);
         Global.receiverComponentQueue = new MessageQueue(b);
     }
-}
-
-
-class ReceiverComponent implements Runnable
-{
-    Thread t_receiverComponent;
-
-    SecretKey secretKey;
-    public ReceiverComponent(SecretKey sk)
-    {
-        t_receiverComponent = new Thread(this, "ReceiverComponent");
-        t_receiverComponent.start();
-        this.secretKey = sk;
-    }
-
-    public void run()
-    {
-        int i = 0;
-        Message message = new Message();
-        KeyRequestMessage keyRequestMessage = new KeyRequestMessage();
-
-        while(i<Global.input)
-        {
-            i++;
-
-
-            keyRequestMessage = Global.mbrSecretKey.receive();
-
-            if (keyRequestMessage.messageName.equals("Request Key"))
-            {
-                Global.mbrSecretKey.reply(secretKey);
-            }
-
-
-            message = Global.receiverComponentQueue.get();
-            System.out.println("ReceiverComponent: messageName = " + message.messageName);
-            System.out.println("ReceiverComponent: messageContent = " + message.messageContent + "\n");
-
-        }
-    }
-}
-
+}*/
 
 

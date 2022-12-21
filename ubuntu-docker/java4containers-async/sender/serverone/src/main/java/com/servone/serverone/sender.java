@@ -48,24 +48,15 @@ public class sender {
 
                         //Request for keys
                         KeyRequest kr = new KeyRequest();
-                        kr.messageName = "requestkeys";
                         KeyMessageRequest kmr = new KeyMessageRequest();
                         Keys keys = new Keys();
-                        keys  = kmr.post('http://127.0.0.1:3000/requestkey',kr);
-                        SenderComponent senderComponent = new SenderComponent(keys.secretKey, keys.privateKey);
-                        //SecureSenderConnector.aSecureSenderConnector();
-                
-                        //SecureReceiverConnector.aSecureReceiverConnector();
-                
-                        //PublicKeyRepository publicKeyRepository = new PublicKeyRepository(publicKey);
-                        //ReceiverComponent receiverComponent = new ReceiverComponent(secretKey);
+                        kr.messageName = "requestkeys";
+                        keys  = kmr.post('http://127.0.0.1:8000/requestkey',kr);
+                        System.out.println(keys.publicKey+" and "+keys.privateKey)
+                        //SenderComponent senderComponent = new SenderComponent(keys.secretKey, keys.privateKey);
+                      
                         senderComponent.t_senderComponent.join();
-                        //SecureSenderConnector.t_SecuritySenderCoordinator.join();
-                        //SecureSenderConnector.t_AsynchronousMCSender.join();
-                        //SecureReceiverConnector.t_SecurityReceiverCoordinator.join();
-                        //SecureReceiverConnector.t_AsynchronousMCReceiver.join();
-                        //receiverComponent.t_receiverComponent.join();
-                        //publicKeyRepository.t_PublicKeyRepository.join();
+                    
                         return "This is the customer server";
                         }catch(Exception e){
                             String errorMessage = null;
