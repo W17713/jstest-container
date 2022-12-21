@@ -8,8 +8,8 @@
 		<version>2.7.3</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.servfour</groupId>
-	<artifactId>serverfour</artifactId>
+	<groupId>com.servfive</groupId>
+	<artifactId>serverfive</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>serverfour</name>
 	<description>Two servers communicating with each other</description>

@@ -16,6 +16,14 @@ import java.security.*;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
+import java.util.*;
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+import java.security.KeyFactory;
+import java.security.spec.EncodedKeySpec;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.InvalidKeySpecException;
+
 import com.google.gson.Gson; 
 import com.google.gson.GsonBuilder;
 
@@ -40,17 +48,21 @@ public class key {
                         String encpublicKey = Base64.getEncoder().encodeToString(publicKey.getEncoded());
                         String encprivateKey = Base64.getEncoder().encodeToString(privateKey.getEncoded());
 
-                        private Gson gson = new Gson();
+                        Gson gson = new Gson();
 
-                        Keys keys = new Keys(encsecretKey,encpublicKey,encprivateKey);
-                        public String keysJsonString = gson.toJson(keys);
+                        Keys keys = new Keys();
+                        keys.secretKey = encsecretKey;
+                        keys.publicKey = encpublicKey;
+                        keys.privateKey= encprivateKey;
+                        Global.keysJsonString = gson.toJson(keys);
+                        System.out.println(Global.keysJsonString);
                 
                         //convert keys to string and return
         
                         //PublicKeyRepository publicKeyRepository = new PublicKeyRepository(publicKey);
                         //ReceiverComponent receiverComponent = new ReceiverComponent(secretKey);
                         
-                        //return "This is the receiver server";
+                        return "This is the key genrator server";
                         }catch(Exception e){
                             String errorMessage = null;
                             errorMessage = e.getMessage();
@@ -58,19 +70,26 @@ public class key {
                         }
                          }
     
-    @PostMapping("/requestkey")
-    public String insert(@RequestBody String ob)
+    @GetMapping("/requestkey")
+    //public String insert(@RequestBody String ob)
+    public String getkeys()
           {
-              try{
-                if (ob.messageName=='requestkeys'){
-                    return keysJsonString;
+              try{/*
+                  System.out.println(ob);
+                  String rk = new String("requestkeys");
+                  System.out.println(rk);
+                if (ob == rk){
+                    return Global.keysJsonString;
                 }else{
-                    return "Request not received. Check request name";
-                }
-                    
+                    return "Check request name";
+                }*/
+                    return Global.keysJsonString;
                          }catch(Exception e)
                          {
                                  System.out.println("Exception caught");
+                                 String errorMessage = null;
+                                 errorMessage = e.getMessage();
+                                 return errorMessage;
                              }
                    }
 
@@ -83,7 +102,7 @@ public class key {
 
 
 class Global{
-    public static MessageQueue senderComponentQueue;
+    /*public static MessageQueue senderComponentQueue;
     public static ByteMessageQueue q2;
     public static ByteMessageQueue q3;
     public static ByteMessageQueue q4;
@@ -92,7 +111,8 @@ class Global{
     public static MBRSecretKey mbrSecretKey = new MBRSecretKey();
     public static MBRPublicKey mbrPublicKey = new MBRPublicKey();
     public static int input;
-    public static int queueSize;
+    public static int queueSize;*/
+    public static String keysJsonString;
 }
 
 class Keys {
@@ -100,7 +120,7 @@ class Keys {
     String publicKey = null;
     String privateKey = null;
 }
-
+/*
 class Message {
     String messageName = null;
     String messageContent = null;
@@ -109,8 +129,8 @@ class Message {
     String senderID=null;
     String userRole=null;
     PrivateKey privateKey = null;
-}
-
+}*/
+/*
 class MessageQueue { //Message Queue using Message class
 
     private int maxCount;
@@ -149,7 +169,7 @@ class MessageQueue { //Message Queue using Message class
             notify();
     }
 
-    /*public synchronized Message get() {
+    public synchronized Message get() {
         Message message;
         while (messageCount == 0) {
             try {
@@ -164,7 +184,7 @@ class MessageQueue { //Message Queue using Message class
         if (messageCount == maxCount - 1)
             notify();
         return message;
-    }*/
+    }
     public Message get(StringMessage msg) {
         Message message;
         message = new Message();
@@ -180,7 +200,7 @@ class MessageQueue { //Message Queue using Message class
         message.privateKey = message.privateKey;
         message.senderID = message.senderID;
         message.userRole = message.userRole;
-        /*
+        
         while (messageCount == 0) {
             try {
                 wait();
@@ -192,10 +212,10 @@ class MessageQueue { //Message Queue using Message class
         bottom = (bottom + 1) % maxCount; // to fetch next item from
         --messageCount;
         if (messageCount == maxCount - 1)
-            notify();*/
+            notify();
         return message;
     }
-}
+}*/
 
 class KeyRequestMessage {
     String messageName = null;
