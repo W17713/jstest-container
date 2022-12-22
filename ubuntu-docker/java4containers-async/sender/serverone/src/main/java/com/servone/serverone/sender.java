@@ -1,6 +1,9 @@
 package com.servone.serverone;
 
 import java.net.URI;
+import java.net.URL;
+import java.io.*;
+import java.net.HttpURLConnection;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -22,6 +25,9 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
 import java.util.*;
+
+import com.google.gson.Gson; 
+import com.google.gson.GsonBuilder;
 
 @SpringBootApplication
 @RestController
@@ -49,13 +55,14 @@ public class sender {
                         //Request for keys
                         KeyRequest kr = new KeyRequest();
                         KeyMessageRequest kmr = new KeyMessageRequest();
-                        Keys keys = new Keys();
-                        kr.messageName = "requestkeys";
-                        keys  = kmr.post('http://127.0.0.1:8000/requestkey',kr);
-                        System.out.println(keys.publicKey+" and "+keys.privateKey)
+                        //Keys keys = new Keys();
+                       // String reqmessageName = "requestkeys";
+                       // String keys  = kmr.post("http://127.0.0.1:8000/requestkey",reqmessageName);
+                        String keys  = kmr.get("http://127.0.0.1:8000/requestkey");
+                        System.out.println(keys);
                         //SenderComponent senderComponent = new SenderComponent(keys.secretKey, keys.privateKey);
                       
-                        senderComponent.t_senderComponent.join();
+                        //senderComponent.t_senderComponent.join();
                     
                         return "This is the customer server";
                         }catch(Exception e){
@@ -123,7 +130,7 @@ class Message {
 class Keys {
     String secretKey = null;
     String publicKey = null;
-    string privateKey = null;
+    String privateKey = null;
 }
 
 class KeyRequest {
@@ -131,15 +138,22 @@ class KeyRequest {
 }
 
 class KeyMessageRequest{
-    public Keys post(String posturl, KeyRequest krObj){
-        Gson gson = new Gson(); 
+    public String post(String posturl, String requestMsg){
+        try{
+            Gson gson = new Gson(); 
         URL url = new URL (posturl);
         HttpURLConnection con = (HttpURLConnection)url.openConnection();
         con.setRequestMethod("POST");
         con.setRequestProperty("Content-Type", "application/json");
         con.setRequestProperty("Accept", "application/json");
         con.setDoOutput(true);
-        String jsonInputString = gson.toJson(krObj);
+        String jsonInputString = null;
+        if (requestMsg =="requestkeys"){
+            jsonInputString = requestMsg;
+        }else{
+            jsonInputString = "json string later to be declared"; 
+            //gson.toJson(krObj);
+        }
         try(OutputStream os = con.getOutputStream()) {
             byte[] input = jsonInputString.getBytes("utf-8");
             os.write(input, 0, input.length);			
@@ -152,12 +166,37 @@ class KeyMessageRequest{
             while ((responseLine = br.readLine()) != null) {
                 response.append(responseLine.trim());
                     }
-            //rspString = response.toString();
-            msg = gson.fromJson(response, KeyRequest);
-            System.out.println(msg);
-            return msg;
+            String rspString = response.toString();
+            //String msg = gson.fromJson(rspString, KeyRequest.class);
+            System.out.println(rspString);
+            return rspString;
+            }}catch(Exception e){
+            String errorMessage = e.getMessage();
+            System.out.println(errorMessage);
+            return errorMessage;
             }
     }
+
+    public String get(String geturl){
+        try{
+        URL url = new URL (geturl);
+        HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+
+        //HttpURLConnection connection = new URL(geturl).openConnection();
+        InputStream response = connection.getInputStream();
+        try (Scanner scanner = new Scanner(response)) {
+                String responseBody = scanner.useDelimiter("\\A").next();
+                System.out.println(responseBody);
+                return responseBody;
+        }
+       // String rsp = response.toString();
+        //return responseBody;
+        }catch(Exception e){
+            String errormsg=e.getMessage();
+            System.out.println(errormsg);
+            return errormsg;
+        }
+}
 }
 
 class MessageQueue { //Message Queue using Message class
@@ -213,9 +252,9 @@ class MessageQueue { //Message Queue using Message class
             try{
                 RestTemplate resttemp = new RestTemplate();
                 //MappingJacksonHttpMessageConverter converter = new MappingJacksonHttpMessageConverter();
-                AbstractHttpMessageConverter converter = new AbstractHttpMessageConverter();
-                converter.setObjectMapper(new ObjectMapper());
-                resttemp.getMessageConverters().add(converter);
+                //AbstractHttpMessageConverter converter = new AbstractHttpMessageConverter();
+                //converter.setObjectMapper(new ObjectMapper());
+                //resttemp.getMessageConverters().add(converter);
                 String baseurl = "http://127.0.0.1:3000/sendmessage";
                 URI uri = new URI(baseurl);
                 ResponseEntity<String> result = resttemp.postForEntity(uri,msgobj,String.class);
