@@ -24,6 +24,12 @@ import java.security.*;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
+import javax.crypto.spec.SecretKeySpec;
+import java.security.KeyFactory;
+import java.security.spec.EncodedKeySpec;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.InvalidKeySpecException;
+
 import java.util.*;
 
 import com.google.gson.Gson; 
@@ -58,11 +64,20 @@ public class sender {
                         //Keys keys = new Keys();
                        // String reqmessageName = "requestkeys";
                        // String keys  = kmr.post("http://127.0.0.1:8000/requestkey",reqmessageName);
-                        String keys  = kmr.get("http://127.0.0.1:8000/requestkey");
+                        String keysstring  = kmr.get("http://127.0.0.1:8000/requestkey");
                         System.out.println(keys);
-                        //SenderComponent senderComponent = new SenderComponent(keys.secretKey, keys.privateKey);
+                        Gson gson = new Gson(); 
+                        Keys keysobj = new Keys();
+                        keysobj = gson.fromJson(keysstring,Keys.class);
+                        KeyFactory keyFactory = KeyFactory.getInstance("DSA");
+                        byte[] secretKeyBytes = Base64.getDecoder().decode(keysobj.secretKey);
+                        byte[] privateKeyBytes = Base64.getDecoder().decode(keysobj.privateKey);
+                        SecretKey secKey = new SecretKeySpec(secretKeyBytes, 0, secretKeyBytes.length, "DES");
+                        EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
+                        PrivateKey priKey = keyFactory.generatePrivate(privateKeySpec);
+                        SenderComponent senderComponent = new SenderComponent(secKey, priKey);
                       
-                        //senderComponent.t_senderComponent.join();
+                        senderComponent.t_senderComponent.join();
                     
                         return "This is the customer server";
                         }catch(Exception e){
@@ -78,44 +93,6 @@ public class sender {
 	}
 
 }
-/*
-public class sender{ //Main
-
-public static void main(String args[]) throws Exception {
-
-        KeyGenerator keygen = KeyGenerator.getInstance("DES");
-        SecretKey secretKey = keygen.generateKey();
-
-        KeyPairGenerator kpg = KeyPairGenerator.getInstance("DSA");
-        kpg.initialize(512); // 512 is the key size.
-
-        KeyPair kp = kpg.generateKeyPair();
-        PublicKey publicKey = kp.getPublic();
-        PrivateKey privateKey = kp.getPrivate();
-
-       //Parameters
-        Global.input =10;    //programmer will decide input
-
-        Global.queueSize=25;  //program will decide queueSize
-        setSize setside= new setSize();
-        setside.setSize(Global.input,Global.queueSize);
-        SenderComponent senderComponent = new SenderComponent(secretKey, privateKey);
-        //SecureSenderConnector.aSecureSenderConnector();
-
-        //SecureReceiverConnector.aSecureReceiverConnector();
-
-        PublicKeyRepository publicKeyRepository = new PublicKeyRepository(publicKey);
-        ReceiverComponent receiverComponent = new ReceiverComponent(secretKey);
-        senderComponent.t_senderComponent.join();
-        //SecureSenderConnector.t_SecuritySenderCoordinator.join();
-        //SecureSenderConnector.t_AsynchronousMCSender.join();
-        //SecureReceiverConnector.t_SecurityReceiverCoordinator.join();
-        //SecureReceiverConnector.t_AsynchronousMCReceiver.join();
-        //receiverComponent.t_receiverComponent.join();
-        publicKeyRepository.t_PublicKeyRepository.join();
-
-}
-}*/
 
 class Message {
     String messageName = null;
@@ -216,14 +193,14 @@ class MessageQueue { //Message Queue using Message class
 
     //public synchronized void put(Message message) {
     public void put(Message message) {
-        while (messageCount == maxCount) {
+       /* while (messageCount == maxCount) {
             try {
                 wait();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-        messageCount++;
+        messageCount++;*/
 
         /*buffer[up].messageName = message.messageName;
         buffer[up].messageContent = message.messageContent;
@@ -247,14 +224,10 @@ class MessageQueue { //Message Queue using Message class
 
         up = (up + 1) % maxCount; // to place next item in
 
-        if (messageCount == 1){
+       // if (messageCount == 1){
             //notify(); //change notify function to http post function
             try{
                 RestTemplate resttemp = new RestTemplate();
-                //MappingJacksonHttpMessageConverter converter = new MappingJacksonHttpMessageConverter();
-                //AbstractHttpMessageConverter converter = new AbstractHttpMessageConverter();
-                //converter.setObjectMapper(new ObjectMapper());
-                //resttemp.getMessageConverters().add(converter);
                 String baseurl = "http://127.0.0.1:3000/sendmessage";
                 URI uri = new URI(baseurl);
                 ResponseEntity<String> result = resttemp.postForEntity(uri,msgobj,String.class);
@@ -270,7 +243,43 @@ class MessageQueue { //Message Queue using Message class
                  errorMessage = e.getMessage();
                  System.out.println(errorMessage);
                  }
+    //    }
+    }
+
+    public String post(Message requestMsg){
+        try{
+            String posturl = "http://127.0.0.1:3000/sendmessage";
+            Gson gson = new Gson(); 
+        URL url = new URL (posturl);
+        HttpURLConnection con = (HttpURLConnection)url.openConnection();
+        con.setRequestMethod("POST");
+        con.setRequestProperty("Content-Type", "application/json");
+        con.setRequestProperty("Accept", "application/json");
+        con.setDoOutput(true);
+        String jsonInputString = null;
+        jsonInputString = gson.toJson(requestMsg);
+        
+        try(OutputStream os = con.getOutputStream()) {
+            byte[] input = jsonInputString.getBytes("utf-8");
+            os.write(input, 0, input.length);			
         }
+
+        try(BufferedReader br = new BufferedReader(
+            new InputStreamReader(con.getInputStream(), "utf-8"))) {
+            StringBuilder response = new StringBuilder();
+            String responseLine = null;
+            while ((responseLine = br.readLine()) != null) {
+                response.append(responseLine.trim());
+                    }
+            String rspString = response.toString();
+            //String msg = gson.fromJson(rspString, KeyRequest.class);
+            System.out.println(rspString);
+            return rspString;
+            }}catch(Exception e){
+            String errorMessage = e.getMessage();
+            System.out.println(errorMessage);
+            return errorMessage;
+            }
     }
 
 
@@ -424,7 +433,8 @@ class SenderComponent  implements Runnable {
             System.out.println("SenderComponent: messageName = " + message.messageName);
             System.out.println("SenderComponent: messageContent = " + message.messageContent + "\n");
 
-            Global.senderComponentQueue.put(message);
+            //Global.senderComponentQueue.put(message);
+            Global.senderComponentQueue.post(message);
         }
     }
 }

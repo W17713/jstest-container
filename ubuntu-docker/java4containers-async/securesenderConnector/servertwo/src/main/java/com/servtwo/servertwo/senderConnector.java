@@ -27,6 +27,9 @@ import java.security.spec.InvalidKeySpecException;
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 
+import com.google.gson.Gson; 
+import com.google.gson.GsonBuilder;
+
 @RestController
 @SpringBootApplication
 public class senderConnector {
@@ -38,7 +41,7 @@ public class senderConnector {
           
           
           @PostMapping("/sendmessage")
-          public String insert(@RequestBody Message ob)
+          public String insert(@RequestBody String ob)
                     {
                         try{
                             SecureSenderConnector.aSecureSenderConnector(ob);
@@ -525,9 +528,9 @@ class SecureSenderConnector {
 
     static hashValueGenration hs;
 
-    static void aSecureSenderConnector(Message msg){
+    static void aSecureSenderConnector(String msg){
         try {
-
+            System.out.println(msg);
 
             ee = new EncryptionEncryptor();
             dss = new DigitalSignatureSigner();
@@ -549,8 +552,13 @@ class SecureSenderConnector {
 class SecuritySenderCoordinator implements Runnable {
 
     Message msg = new Message();
-    public SecuritySenderCoordinator(Message msg){
-                 this.msg = msg;
+    //String msg = new String();
+    public SecuritySenderCoordinator(String msg){
+                //added
+                Gson gson = new Gson(); 
+                Keys keysobj = new Keys();
+                this.msg = gson.fromJson(msg,Message.class);
+                //this.msg = msg;
              }
 
     Thread t_SecuritySenderCoordinator;
