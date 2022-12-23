@@ -65,7 +65,7 @@ public class sender {
                        // String reqmessageName = "requestkeys";
                        // String keys  = kmr.post("http://127.0.0.1:8000/requestkey",reqmessageName);
                         String keysstring  = kmr.get("http://127.0.0.1:8000/requestkey");
-                        System.out.println(keys);
+                        System.out.println(keysstring);
                         Gson gson = new Gson(); 
                         Keys keysobj = new Keys();
                         keysobj = gson.fromJson(keysstring,Keys.class);
@@ -103,6 +103,17 @@ class Message {
     String userRole=null;
     PrivateKey privateKey = null;
 }
+
+class StringMessage {
+           String messageName = null;
+           String messageContent = null;
+        
+           String secretKey = null;
+           String senderID=null;
+           String userRole=null;
+           String privateKey = null;
+        }
+
 
 class Keys {
     String secretKey = null;
@@ -250,6 +261,7 @@ class MessageQueue { //Message Queue using Message class
         try{
             String posturl = "http://127.0.0.1:3000/sendmessage";
             Gson gson = new Gson(); 
+            StringMessage strrequestMsg = new StringMessage();
         URL url = new URL (posturl);
         HttpURLConnection con = (HttpURLConnection)url.openConnection();
         con.setRequestMethod("POST");
@@ -257,7 +269,17 @@ class MessageQueue { //Message Queue using Message class
         con.setRequestProperty("Accept", "application/json");
         con.setDoOutput(true);
         String jsonInputString = null;
-        jsonInputString = gson.toJson(requestMsg);
+
+        String encsecretKey = Base64.getEncoder().encodeToString(requestMsg.secretKey.getEncoded());
+        
+        String encprivateKey = Base64.getEncoder().encodeToString(requestMsg.privateKey.getEncoded());
+        strrequestMsg.privateKey = encprivateKey;
+        strrequestMsg.secretKey = encsecretKey;
+        strrequestMsg.messageName = requestMsg.messageName;
+        strrequestMsg.messageContent = requestMsg.messageContent;
+        strrequestMsg.senderID = requestMsg.senderID;
+        strrequestMsg.userRole = requestMsg.userRole;
+        jsonInputString = gson.toJson(strrequestMsg);
         
         try(OutputStream os = con.getOutputStream()) {
             byte[] input = jsonInputString.getBytes("utf-8");

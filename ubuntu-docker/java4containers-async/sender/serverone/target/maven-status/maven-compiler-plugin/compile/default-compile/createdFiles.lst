@@ -1,11 +1,12 @@
 com/servone/serverone/KeyRequest.class
-com/servone/serverone/ByteMessage.class
-com/servone/serverone/Keys.class
-com/servone/serverone/KeyMessageRequest.class
+com/servone/serverone/StringMessage.class
 com/servone/serverone/sender.class
-com/servone/serverone/MessageQueue.class
-com/servone/serverone/ByteMessageQueue.class
 com/servone/serverone/setSize.class
 com/servone/serverone/Global.class
 com/servone/serverone/Message.class
+com/servone/serverone/ByteMessage.class
+com/servone/serverone/Keys.class
+com/servone/serverone/KeyMessageRequest.class
+com/servone/serverone/MessageQueue.class
+com/servone/serverone/ByteMessageQueue.class
 com/servone/serverone/SenderComponent.class

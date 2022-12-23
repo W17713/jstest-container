@@ -44,6 +44,7 @@ public class senderConnector {
           public String insert(@RequestBody String ob)
                     {
                         try{
+                            System.out.println(ob);
                             SecureSenderConnector.aSecureSenderConnector(ob);
                             //senderComponent.t_senderComponent.join();
                             SecureSenderConnector.t_SecuritySenderCoordinator.join();
@@ -59,6 +60,12 @@ public class senderConnector {
              SpringApplication.run(senderConnector.class, args);
          }
         }
+
+class Keys {
+         String secretKey = null;
+         String publicKey = null;
+         String privateKey = null;
+    }
 
 class Message {
     String messageName = null;
@@ -380,7 +387,7 @@ class Global{
     //public static MessageQueue receiverComponentQueue;
 
     public static MBRSecretKey mbrSecretKey = new MBRSecretKey();
-   public static MBRPublicKey mbrPublicKey = new MBRPublicKey();
+    public static MBRPublicKey mbrPublicKey = new MBRPublicKey();
     public static int input;
     public static int queueSize;
 }
@@ -530,7 +537,7 @@ class SecureSenderConnector {
 
     static void aSecureSenderConnector(String msg){
         try {
-            System.out.println(msg);
+            //System.out.println(msg);
 
             ee = new EncryptionEncryptor();
             dss = new DigitalSignatureSigner();
@@ -551,15 +558,16 @@ class SecureSenderConnector {
 
 class SecuritySenderCoordinator implements Runnable {
 
-    Message msg = new Message();
+    StringMessage msg = new StringMessage();
     //String msg = new String();
-    public SecuritySenderCoordinator(String msg){
+    public SecuritySenderCoordinator(String strmsg){
                 //added
                 Gson gson = new Gson(); 
-                Keys keysobj = new Keys();
-                this.msg = gson.fromJson(msg,Message.class);
+                //Keys keysobj = new Keys();
+                this.msg = gson.fromJson(strmsg,StringMessage.class);
                 //this.msg = msg;
-             }
+    }
+                
 
     Thread t_SecuritySenderCoordinator;
 
@@ -584,10 +592,10 @@ throws Exception
         ByteMessage byteMessage = new ByteMessage();
 
         //added
-        byte[] secretKeyBytes = Base64.getDecoder().decode(message.secretKey);
-        byte[] privateKeyBytes = Base64.getDecoder().decode(message.privateKey);
+        //byte[] secretKeyBytes = Base64.getDecoder().decode(message.secretKey);
+        //byte[] privateKeyBytes = Base64.getDecoder().decode(message.privateKey);
         
-        SecretKey secKey = new SecretKeySpec(secretKeyBytes, 0, secretKeyBytes.length, "DES"); 
+        //SecretKey secKey = new SecretKeySpec(secretKeyBytes, 0, secretKeyBytes.length, "DES"); 
         //PrivateKey priKey = new DSAPrivateKeySpec(privateKey, 0, privateKey.length, "DSA"); 
         /*
         try{
@@ -607,14 +615,27 @@ throws Exception
         {
             i++;
 
-            message=Global.senderComponentQueue.get(this.msg);
+            //message=Global.senderComponentQueue.get(this.msg);
+            message=this.msg;
 
            
             try {
-                   KeyFactory keyFactory = KeyFactory.getInstance("DSA");
-                   EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
-                   PrivateKey priKey = keyFactory.generatePrivate(privateKeySpec);
-                   
+
+                 //added
+                    /*Gson gson = new Gson();
+                    Keys keysobj = new Keys();
+                    keysobj = gson.fromJson(keysstring,Keys.class);*/
+
+                    byte[] secretKeyBytes = Base64.getDecoder().decode(message.secretKey);
+                    byte[] privateKeyBytes = Base64.getDecoder().decode(message.privateKey);
+                  
+                    SecretKey secKey = new SecretKeySpec(secretKeyBytes, 0, secretKeyBytes.length, "DES");
+                    KeyFactory keyFactory = KeyFactory.getInstance("DSA");
+                    EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
+                    PrivateKey priKey = keyFactory.generatePrivate(privateKeySpec);
+                    System.out.println(message.secretKey);
+                    System.out.println(message.privateKey);
+
                     byteMessage.messageContent = (message.messageContent).getBytes();
                     byteMessage.messageName = (message.messageName).getBytes();
 
@@ -634,7 +655,7 @@ throws Exception
                     byteMessage.hashedValue = hs.generate(byteMessage.messageContent);
                     System.out.println("Hashed value! " + byteMessage.hashedValue);
 
-                    byteMessage.signature = dss.sign(byteMessage.messageContent, priKey);
+                    byteMessage.signature = dss.sign(byteMessage.messageContent,priKey);
                     System.out.println("Signed messageContent! " + byteMessage.signature);
 
 
@@ -648,7 +669,9 @@ throws Exception
             }
         }
     }
+    
 }
+
 class AsynchronousMCSender implements Runnable {
     Thread t_AsynchronousMCSender;
 
