@@ -16,6 +16,9 @@ import java.security.*;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
+import com.google.gson.Gson; 
+import com.google.gson.GsonBuilder;
+
 
 @SpringBootApplication
 @RestController
@@ -32,9 +35,10 @@ public class receiver {
                          }
     
     @PostMapping("/sendmessage")
-    public String insert(@RequestBody Message ob)
+    public String insert(@RequestBody String ob)
           {
               try{
+                System.out.println(ob);
                 //KeyGenerator keygen = KeyGenerator.getInstance("DES");
                 //SecretKey secretKey = keygen.generateKey();
                 
@@ -48,18 +52,18 @@ public class receiver {
                 //PrivateKey privateKey = kp.getPrivate();
         
                //Parameters
-                Global.input =10;    //programmer will decide input
+                //Global.input =10;    //programmer will decide input
         
-                Global.queueSize=25;  //program will decide queueSize
-                setSize setside= new setSize();
-                setside.setSize(Global.input,Global.queueSize);
+                //Global.queueSize=25;  //program will decide queueSize
+                //setSize setside= new setSize();
+                //setside.setSize(Global.input,Global.queueSize);
                 //SenderComponent senderComponent = new SenderComponent(secretKey, privateKey);
                 //SecureSenderConnector.aSecureSenderConnector();
         
                 //SecureReceiverConnector.aSecureReceiverConnector();
         
                 //PublicKeyRepository publicKeyRepository = new PublicKeyRepository(publicKey);
-               // ReceiverComponent receiverComponent = new ReceiverComponent(secretKey);
+                //ReceiverComponent receiverComponent = new ReceiverComponent(secretKey);
 
                ReceiverComponent receiverComponent = new ReceiverComponent(ob);
                 //senderComponent.t_senderComponent.join();
@@ -130,6 +134,37 @@ class Message {
     String userRole=null;
     PrivateKey privateKey = null;
 }
+/*
+class PublicKeyRepository implements Runnable{
+
+    Thread t_PublicKeyRepository;
+    PublicKey publicKey;
+
+    public PublicKeyRepository(PublicKey publicKey) throws Exception
+    {
+        t_PublicKeyRepository = new Thread(this, "PublicKeyRepository");
+        t_PublicKeyRepository.start();
+        this.publicKey = publicKey;
+
+    }
+    public void run() {
+        int i = 0;
+        KeyRequestMessage keyRequestMessage = new KeyRequestMessage();
+
+        while(i<Global.input)
+        {
+            i++;
+
+            keyRequestMessage = Global.mbrPublicKey.receive();
+
+            if (keyRequestMessage.messageName.equals("Request Key"))
+            {
+                Global.mbrPublicKey.reply(publicKey);
+            }
+        }
+    }
+
+}*/
 /*
 class MessageQueue { //Message Queue using Message class
 
@@ -291,7 +326,7 @@ class Global{
    // public static ByteMessageQueue q4;
     //public static MessageQueue receiverComponentQueue;
 
-    public static MBRSecretKey mbrSecretKey = new MBRSecretKey();
+    //public static MBRSecretKey mbrSecretKey = new MBRSecretKey();
     //public static MBRPublicKey mbrPublicKey = new MBRPublicKey();
     public static int input;
     public static int queueSize;
@@ -303,7 +338,7 @@ class ReceiverComponent implements Runnable
     Thread t_receiverComponent;
 
     SecretKey secretKey;
-    public ReceiverComponent(Message message)
+    public ReceiverComponent(String message)
     {
         t_receiverComponent = new Thread(this, "ReceiverComponent");
         t_receiverComponent.start();
@@ -314,19 +349,19 @@ class ReceiverComponent implements Runnable
     {
         int i = 0;
         Message message = new Message();
-        KeyRequestMessage keyRequestMessage = new KeyRequestMessage();
+        //KeyRequestMessage keyRequestMessage = new KeyRequestMessage();
 
         while(i<Global.input)
         {
             i++;
 
 
-            keyRequestMessage = Global.mbrSecretKey.receive();
+            /*keyRequestMessage = Global.mbrSecretKey.receive();
 
             if (keyRequestMessage.messageName.equals("Request Key"))
             {
                 Global.mbrSecretKey.reply(secretKey);
-            }
+            }*/
 
 
             //message = Global.receiverComponentQueue.get();

@@ -44,7 +44,7 @@ public class senderConnector {
           public String insert(@RequestBody String ob)
                     {
                         try{
-                            System.out.println(ob);
+                            //System.out.println(ob);
                             SecureSenderConnector.aSecureSenderConnector(ob);
                             //senderComponent.t_senderComponent.join();
                             SecureSenderConnector.t_SecuritySenderCoordinator.join();
@@ -152,6 +152,53 @@ class MessageQueue { //Message Queue using Message class
                  errorMessage = e.getMessage();
                  System.out.println(errorMessage);
                  }
+        }
+    }
+        public String post(Message requestMsg){
+            try{
+                String posturl = "http://127.0.0.1:8080/sendmessage";
+                Gson gson = new Gson(); 
+                StringMessage strrequestMsg = new StringMessage();
+            URL url = new URL (posturl);
+            HttpURLConnection con = (HttpURLConnection)url.openConnection();
+            con.setRequestMethod("POST");
+            con.setRequestProperty("Content-Type", "application/json");
+            con.setRequestProperty("Accept", "application/json");
+            con.setDoOutput(true);
+            String jsonInputString = null;
+    
+            String encsecretKey = Base64.getEncoder().encodeToString(requestMsg.secretKey.getEncoded());
+            
+            String encprivateKey = Base64.getEncoder().encodeToString(requestMsg.privateKey.getEncoded());
+            strrequestMsg.privateKey = encprivateKey;
+            strrequestMsg.secretKey = encsecretKey;
+            strrequestMsg.messageName = requestMsg.messageName;
+            strrequestMsg.messageContent = requestMsg.messageContent;
+            strrequestMsg.senderID = requestMsg.senderID;
+            strrequestMsg.userRole = requestMsg.userRole;
+            jsonInputString = gson.toJson(strrequestMsg);
+            
+            try(OutputStream os = con.getOutputStream()) {
+                byte[] input = jsonInputString.getBytes("utf-8");
+                os.write(input, 0, input.length);			
+            }
+    
+            try(BufferedReader br = new BufferedReader(
+                new InputStreamReader(con.getInputStream(), "utf-8"))) {
+                StringBuilder response = new StringBuilder();
+                String responseLine = null;
+                while ((responseLine = br.readLine()) != null) {
+                    response.append(responseLine.trim());
+                        }
+                String rspString = response.toString();
+                //String msg = gson.fromJson(rspString, KeyRequest.class);
+                System.out.println(rspString);
+                return rspString;
+                }}catch(Exception e){
+                String errorMessage = e.getMessage();
+                System.out.println(errorMessage);
+                return errorMessage;
+                }
         }
     }
 
@@ -698,7 +745,8 @@ class AsynchronousMCSender implements Runnable {
             message.hashedValue = new String(byteMessage.hashedValue);
             message.userRole = new String(byteMessage.userRole);
 
-            Global.q3.put(message); //replace with post request
+            //Global.q3.put(message); //replace with post request
+            Global.q3.post(message);
         }
     }
 }

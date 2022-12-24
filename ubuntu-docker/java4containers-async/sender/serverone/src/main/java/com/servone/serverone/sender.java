@@ -342,49 +342,49 @@ class ByteMessageQueue {
         private int bottom = 0, up = 0;
 
         ByteMessageQueue(int queueSize) {
-                                    this.maxCount=queueSize;
-                                            buffer = new ByteMessage[queueSize];
-                                                    for (int i = 0; i < maxCount; i++){
-                                                                    buffer[i] = new ByteMessage();
-                                                                            }
-                                                                                }
-                        public synchronized void put(ByteMessage byteMessage) {
+            this.maxCount=queueSize;
+            buffer = new ByteMessage[queueSize];
+            for (int i = 0; i < maxCount; i++){
+                buffer[i] = new ByteMessage();
+                                            }
+                                        }
+            public synchronized void put(ByteMessage byteMessage) {
                                     while (messageCount == maxCount) {
                                                     try {
-                                                                        wait();
-                                                                                    } catch (InterruptedException e) {
-                                                                                                        e.printStackTrace();
-                                                                                                                    }
-                                                                                                                            }
-                         messageCount++;
+                                                        wait();
+                                                        } catch (InterruptedException e) {
+                                                        e.printStackTrace();
+                                                                            }
+                                                                        }
+            messageCount++;
 
-                                 buffer[up].messageName = byteMessage.messageName; // place message in buffer;
-                                         buffer[up].messageContent = byteMessage.messageContent;
+            buffer[up].messageName = byteMessage.messageName; // place message in buffer;
+            buffer[up].messageContent = byteMessage.messageContent;
 
-                                                 buffer[up].senderID = byteMessage.senderID;
-                                                         buffer[up].userRole = byteMessage.userRole;
-                                                                 buffer[up].signature = byteMessage.signature;
-                                                                         buffer[up].hashedValue = byteMessage.hashedValue;
-                         up = (up + 1) % maxCount; // to place next item in
+            buffer[up].senderID = byteMessage.senderID;
+            buffer[up].userRole = byteMessage.userRole;
+            buffer[up].signature = byteMessage.signature;
+            buffer[up].hashedValue = byteMessage.hashedValue;
+            up = (up + 1) % maxCount; // to place next item in
 
-                                 if (messageCount == 1)
-                                                 notify();
+            if (messageCount == 1)
+                notify();
                                                      }
-                         public synchronized ByteMessage get() {
-                                     ByteMessage byteMessage;
-                                             while (messageCount == 0)
-                                                             try {
-                                                                                 wait();
-                                                                                             } catch (InterruptedException e) {
-                                                                                                                 e.printStackTrace();
-                                                                                                                             }
-                                                                          byteMessage = buffer[bottom];
-                                                                                                                                             bottom = (bottom + 1) % maxCount;
-                                                                                                                                                     --messageCount;
-                                                                                                                                                             if (messageCount == maxCount - 1)
-                                                                                                                                                                             notify();
-                                                                                                                                                                                     return byteMessage;
-                                                                                                                                                                                         }
+            public synchronized ByteMessage get() {
+                    ByteMessage byteMessage;
+                    while (messageCount == 0)
+                        try {
+                            wait();
+                                } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                                                }
+                    byteMessage = buffer[bottom];
+                    bottom = (bottom + 1) % maxCount;
+                    --messageCount;
+                    if (messageCount == maxCount - 1)
+                        notify();
+                    return byteMessage;
+                        }
 }
 /*
 class setSize{
