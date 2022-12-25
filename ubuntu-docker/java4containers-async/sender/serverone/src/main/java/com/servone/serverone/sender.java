@@ -65,7 +65,7 @@ public class sender {
                        // String reqmessageName = "requestkeys";
                        // String keys  = kmr.post("http://127.0.0.1:8000/requestkey",reqmessageName);
                         String keysstring  = kmr.get("http://127.0.0.1:8000/requestkey");
-                        System.out.println(keysstring);
+                        //System.out.println(keysstring);
                         Gson gson = new Gson(); 
                         Keys keysobj = new Keys();
                         keysobj = gson.fromJson(keysstring,Keys.class);

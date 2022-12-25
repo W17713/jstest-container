@@ -680,8 +680,8 @@ throws Exception
                     KeyFactory keyFactory = KeyFactory.getInstance("DSA");
                     EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
                     PrivateKey priKey = keyFactory.generatePrivate(privateKeySpec);
-                    System.out.println(message.secretKey);
-                    System.out.println(message.privateKey);
+                    //System.out.println(message.secretKey);
+                    //System.out.println(message.privateKey);
 
                     byteMessage.messageContent = (message.messageContent).getBytes();
                     byteMessage.messageName = (message.messageName).getBytes();
