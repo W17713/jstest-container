@@ -271,7 +271,7 @@ class MessageQueue { //Message Queue using Message class
         }
     }
 
-    public String post(Message requestMsg){
+    public String post(StringBMessage requestMsg){
         try{
             String posturl = "http://127.0.0.1:80/sendmessage";
             Gson gson = new Gson(); 
@@ -284,16 +284,16 @@ class MessageQueue { //Message Queue using Message class
         con.setDoOutput(true);
         String jsonInputString = null;
 
-        String encsecretKey = Base64.getEncoder().encodeToString(requestMsg.secretKey.getEncoded());
+        //String encsecretKey = Base64.getEncoder().encodeToString(requestMsg.secretKey.getEncoded());
         
-        String encprivateKey = Base64.getEncoder().encodeToString(requestMsg.privateKey.getEncoded());
-        strrequestMsg.privateKey = encprivateKey;
-        strrequestMsg.secretKey = encsecretKey;
-        strrequestMsg.messageName = requestMsg.messageName;
-        strrequestMsg.messageContent = requestMsg.messageContent;
-        strrequestMsg.senderID = requestMsg.senderID;
-        strrequestMsg.userRole = requestMsg.userRole;
-        jsonInputString = gson.toJson(strrequestMsg);
+        //String encprivateKey = Base64.getEncoder().encodeToString(requestMsg.privateKey.getEncoded());
+       // strrequestMsg.privateKey = encprivateKey;
+        //strrequestMsg.secretKey = encsecretKey;
+        //strrequestMsg.messageName = requestMsg.messageName;
+        //strrequestMsg.messageContent = requestMsg.messageContent;
+        //strrequestMsg.senderID = requestMsg.senderID;
+        //strrequestMsg.userRole = requestMsg.userRole;
+        jsonInputString = gson.toJson(requestMsg);
         
         try(OutputStream os = con.getOutputStream()) {
             byte[] input = jsonInputString.getBytes("utf-8");
@@ -733,6 +733,7 @@ class AsynchronousMCReceiver implements Runnable {
         ByteMessage byteMessage = new ByteMessage();
         //add Message object
         StringBMessage message = new StringBMessage();
+       //StringMessage message = new StringMessage();
 
         while(i<Global.input)
         {
@@ -741,15 +742,17 @@ class AsynchronousMCReceiver implements Runnable {
             byteMessage = Global.q4.get(); //added
 
             //convert byteMessage to stringMessage for posting
-            //message.messageContent = new String(byteMessage.messageContent);
-            //message.messageName = new String(byteMessage.messageName);
-            //message.senderID = new String(byteMessage.senderID);
-            //message.signature = new String(byteMessage.signature);
-            //message.hashedValue = new String(byteMessage.hashedValue);
-            //message.userRole = new String(byteMessage.userRole);
+            message.messageContent = new String(byteMessage.messageContent);
+            message.messageName = new String(byteMessage.messageName);
+            message.senderID = new String(byteMessage.senderID);
+            message.signature = new String(byteMessage.signature);
+            message.hashedValue = new String(byteMessage.hashedValue);
+            message.userRole = new String(byteMessage.userRole);
 
-            Global.q4.put(byteMessage);
+            //Global.q4.put(byteMessage);
            // Global.q4.put(message);
+            Global.receiverComponentQueue.post(message);
+
         }
 
     }
@@ -827,8 +830,9 @@ throws Exception{
         int i = 0;
         ByteMessage byteMessage = new ByteMessage();
         //StringMessage mess = new StringMessage();
-        Message message =  new Message();
+        StringMessage message =  new StringMessage();
         KeyRequestMessage keyRequestMessage = new KeyRequestMessage();
+        //message = this.msg;
 
         //added
         /* KEY REQUEST 
@@ -851,6 +855,7 @@ throws Exception{
         while(i<Global.input)
         {
             i++;
+            message = this.msg;
             try {
                // KeyFactory keyFactory = KeyFactory.getInstance("DSA");
                // EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
@@ -950,7 +955,8 @@ throws Exception{
                         }
 
                 //Global.receiverComponentQueue.put(message);
-                Global.receiverComponentQueue.post(message);
+                //Global.receiverComponentQueue.post(message);
+                Global.q4.put(byteMessage);
 
             } catch (Exception e) {
                 e.printStackTrace();

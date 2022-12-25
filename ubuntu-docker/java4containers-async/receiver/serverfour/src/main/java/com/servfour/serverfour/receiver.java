@@ -16,8 +16,8 @@ import java.security.*;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
-import com.google.gson.Gson; 
-import com.google.gson.GsonBuilder;
+//import com.google.gson.Gson; 
+//import com.google.gson.GsonBuilder;
 
 
 @SpringBootApplication
@@ -52,11 +52,11 @@ public class receiver {
                 //PrivateKey privateKey = kp.getPrivate();
         
                //Parameters
-                //Global.input =10;    //programmer will decide input
+                Global.input =10;    //programmer will decide input
         
-                //Global.queueSize=25;  //program will decide queueSize
-                //setSize setside= new setSize();
-                //setside.setSize(Global.input,Global.queueSize);
+                Global.queueSize=25;  //program will decide queueSize
+                setSize setside= new setSize();
+                setside.setSize(Global.input,Global.queueSize);
                 //SenderComponent senderComponent = new SenderComponent(secretKey, privateKey);
                 //SecureSenderConnector.aSecureSenderConnector();
         
@@ -342,7 +342,7 @@ class ReceiverComponent implements Runnable
     {
         t_receiverComponent = new Thread(this, "ReceiverComponent");
         t_receiverComponent.start();
-        this.secretKey = message.secretKey;
+        //this.secretKey = message.secretKey;
     }
 
     public void run()
