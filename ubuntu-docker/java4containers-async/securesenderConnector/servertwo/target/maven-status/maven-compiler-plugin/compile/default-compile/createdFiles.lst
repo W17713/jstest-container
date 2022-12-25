@@ -17,6 +17,7 @@ com/servtwo/servertwo/ByteMessage.class
 com/servtwo/servertwo/DigitalSignatureSigner.class
 com/servtwo/servertwo/EncryptionEncryptor.class
 com/servtwo/servertwo/SecureSenderConnector.class
+com/servtwo/servertwo/setSize.class
 com/servtwo/servertwo/EncryptionDecryptor.class
 com/servtwo/servertwo/KeyRequestMessage.class
 com/servtwo/servertwo/DigitalSignatureVerifier.class

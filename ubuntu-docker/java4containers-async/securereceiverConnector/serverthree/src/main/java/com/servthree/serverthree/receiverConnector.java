@@ -1,6 +1,9 @@
 package com.servthree.serverthree;
 
 import java.net.URI;
+import java.net.URL;
+import java.io.*;
+import java.net.HttpURLConnection;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -12,6 +15,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.ResponseEntity; 
+
+import org.springframework.ws.transport.http.HttpUrlConnection;
 
 import java.security.*;
 import java.util.*;
@@ -44,12 +49,19 @@ public class receiverConnector {
 
      //Handling post request
      //@PostMapping(path="/sendmessage",consumes = "any", produces = "application/octet-stream")
+//public String insert(@RequestBody Map<String, Object> ob)
+
      @PostMapping("/sendmessage")
      public String insert(@RequestBody String ob)
-     //public String insert(@RequestBody Map<String, Object> ob)
           {
             try{
-            //Global.input =1;    //programmer will decide input    
+            //Global.input =10;    //programmer will decide input
+            Global.input =10;    //programmer will decide input
+             
+            Global.queueSize=25;  //program will decide queueSize
+            setSize setside= new setSize();
+            setside.setSize(Global.input,Global.queueSize);
+                    
             System.out.println(ob);
             SecureReceiverConnector.aSecureReceiverConnector(ob);
             SecureReceiverConnector.t_SecurityReceiverCoordinator.join();
@@ -66,6 +78,107 @@ public class receiverConnector {
 	}
 
 }
+
+/*class Global{
+     
+         public static MessageQueue senderComponentQueue;
+         public static ByteMessageQueue q2;
+         public static ByteMessageQueue q3;
+         public static ByteMessageQueue q4;
+      //public static MessageQueue receiverComponentQueue;
+     
+        //public static MBRSecretKey mbrSecretKey = new MBRSecretKey();
+        //public static MBRPublicKey mbrPublicKey = new MBRPublicKey();
+         public static int input;
+         public static int queueSize;
+    }*/
+    
+ class setSize{
+                 Global global = new Global();
+         
+                public void setSize(int a,int b) {
+             
+                            //Global.senderComponentQueue = new MessageQueue(b);
+                            //Global.q2 = new ByteMessageQueue(b);
+                            // Global.q3 = new ByteMessageQueue(b);
+                            Global.q4 = new ByteMessageQueue(b);
+                            Global.receiverComponentQueue = new MessageQueue(b);
+                        }
+                     }
+
+class Keys {
+          String secretKey = null;
+          String publicKey = null;
+          String privateKey = null;
+      }
+
+class KeyRequest {
+        String messageName = null;
+     }
+
+class KeyMessageRequest{
+    public String post(String posturl, String requestMsg){
+                try{
+                     Gson gson = new Gson();
+                     URL url = new URL (posturl);
+                     HttpURLConnection con = (HttpURLConnection)url.openConnection();
+                     con.setRequestMethod("POST");
+                     con.setRequestProperty("Content-Type", "application/json");
+                     con.setRequestProperty("Accept", "application/json");
+                     con.setDoOutput(true);
+
+                     String jsonInputString = null;
+                     if (requestMsg =="requestkeys"){
+                        jsonInputString = requestMsg;
+                         }else{
+                            jsonInputString = "json string later to be declared";
+                     //gson.toJson(krObj);
+                            }
+                     try(OutputStream os = con.getOutputStream()) {
+                         byte[] input = jsonInputString.getBytes("utf-8");
+                         os.write(input, 0, input.length);
+                     }
+                    try(BufferedReader br = new BufferedReader(
+                          new InputStreamReader(con.getInputStream(), "utf-8"))) {
+                          StringBuilder response = new StringBuilder();
+                          String responseLine = null;
+                          while ((responseLine = br.readLine()) != null) {
+                                response.append(responseLine.trim());
+                                          }
+                          String rspString = response.toString();
+                                         //String msg = gson.fromJson(rspString, KeyRequest.class);
+                          System.out.println(rspString);
+                          return rspString;
+                    }}catch(Exception e){
+                                    String errorMessage = e.getMessage();
+                                    System.out.println(errorMessage);
+                                    return errorMessage;
+                                    }
+                                     }
+
+ public String get(String geturl){
+                  try{
+                       URL url = new URL (geturl);
+                      HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+               
+                       //HttpURLConnection connection = new URL(geturl).openConnection();
+                      InputStream response = connection.getInputStream();
+                      try (Scanner scanner = new Scanner(response)) {
+                                   String responseBody = scanner.useDelimiter("\\A").next();
+                                   System.out.println(responseBody);
+                                   return responseBody;
+                           }
+                          // String rsp = response.toString();
+                           //return responseBody;
+                           }catch(Exception e){
+                                   String errormsg=e.getMessage();
+                                   System.out.println(errormsg);
+                                   return errormsg;
+                               }
+
+
+}
+ }
 
 class Message {
     String messageName = null;
@@ -718,7 +831,7 @@ throws Exception{
         KeyRequestMessage keyRequestMessage = new KeyRequestMessage();
 
         //added
-        /* KEY REQUEST */
+        /* KEY REQUEST 
         KeyRequest kr = new KeyRequest();
         KeyMessageRequest kmr = new KeyMessageRequest();
         String keysstring  = kmr.get("http://127.0.0.1:8000/requestkey");
@@ -733,7 +846,7 @@ throws Exception{
         EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(publicKeyBytes);
         PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
         //PublicKey priKey = keyFactory.generatePrivate(publicKeySpec);
-        /*KEY REQUEST */
+        KEY REQUEST */
 
         while(i<Global.input)
         {
@@ -742,6 +855,23 @@ throws Exception{
                // KeyFactory keyFactory = KeyFactory.getInstance("DSA");
                // EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
                // PrivateKey priKey = keyFactory.generatePrivate(privateKeySpec);
+                    
+                 /* KEY REQUEST */
+                 KeyRequest kr = new KeyRequest();
+                 KeyMessageRequest kmr = new KeyMessageRequest();
+                 String keysstring  = kmr.get("http://127.0.0.1:8000/requestkey");
+                 //System.out.println(keysstring);
+                 Gson gson = new Gson();
+                 Keys keysobj = new Keys();
+                 keysobj = gson.fromJson(keysstring,Keys.class);
+                 KeyFactory keyFactory = KeyFactory.getInstance("DSA");
+                 byte[] secretKeyBytes = Base64.getDecoder().decode(keysobj.secretKey);
+                 byte[] publicKeyBytes = Base64.getDecoder().decode(keysobj.publicKey);
+                 SecretKey secretKey = new SecretKeySpec(secretKeyBytes, 0, secretKeyBytes.length, "DES");
+                 EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(publicKeyBytes);
+                 PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
+                 //PublicKey priKey = keyFactory.generatePrivate(publicKeySpec);
+                 /*KEY REQUEST */
 
                 //byteMessage = Global.q4.get();
                 byteMessage = Global.q4.get();

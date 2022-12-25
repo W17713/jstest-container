@@ -1,6 +1,9 @@
 package com.servtwo.servertwo;
 
 import java.net.URI;
+import java.net.URL;
+import java.io.*;
+import java.net.HttpURLConnection;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -12,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.ResponseEntity; 
+import org.springframework.ws.transport.http.HttpUrlConnection;
 
 import java.security.*;
 import java.util.*;
@@ -35,8 +39,19 @@ import com.google.gson.GsonBuilder;
 public class senderConnector {
           @GetMapping("/securesender")
           public String home(){
-          
+              try{
+                    //Global.input =10;
+                    //Global.queueSize=25;  //program will decide queueSize
+                   // setSize setside= new setSize();
+                    //setside.setSize(Global.input,Global.queueSize);
+
                    return "This is the secure sender server";
+              }catch(Exception e){
+              String errorMessage = null;
+              errorMessage = e.getMessage();
+              System.out.println(errorMessage);
+              return errorMessage;
+              }
                    }
           
           
@@ -44,7 +59,13 @@ public class senderConnector {
           public String insert(@RequestBody String ob)
                     {
                         try{
-                            //System.out.println(ob);
+                            Global.input =10;
+                            Global.queueSize=25;  //program will decide queueSize
+                            setSize setside= new setSize();
+                            setside.setSize(Global.input,Global.queueSize);
+                            //Global.input =10;
+                            System.out.println("received body");
+                            System.out.println(ob);
                             SecureSenderConnector.aSecureSenderConnector(ob);
                             //senderComponent.t_senderComponent.join();
                             SecureSenderConnector.t_SecuritySenderCoordinator.join();
@@ -59,6 +80,19 @@ public class senderConnector {
         public static void main(String[] args) {
              SpringApplication.run(senderConnector.class, args);
          }
+        }
+
+ class setSize{
+            Global global = new Global();
+     
+            public void setSize(int a,int b) {
+         
+                        //Global.senderComponentQueue = new MessageQueue(b);
+                        Global.q2 = new ByteMessageQueue(b);
+                        Global.q3 = new MessageQueue(b);
+                        //Global.q4 = new ByteMessageQueue(b);
+                        //Global.receiverComponentQueue = new MessageQueue(b);
+                    }
         }
 
 class Keys {
@@ -154,11 +188,11 @@ class MessageQueue { //Message Queue using Message class
                  }
         }
     }
-        public String post(Message requestMsg){
+        public String post(StringBMessage requestMsg){//edited for ssC
             try{
                 String posturl = "http://127.0.0.1:8080/sendmessage";
                 Gson gson = new Gson(); 
-                StringMessage strrequestMsg = new StringMessage();
+                //StringBMessage strrequestMsg = new StringBMessage();
             URL url = new URL (posturl);
             HttpURLConnection con = (HttpURLConnection)url.openConnection();
             con.setRequestMethod("POST");
@@ -167,17 +201,18 @@ class MessageQueue { //Message Queue using Message class
             con.setDoOutput(true);
             String jsonInputString = null;
     
-            String encsecretKey = Base64.getEncoder().encodeToString(requestMsg.secretKey.getEncoded());
+            //String encsecretKey = Base64.getEncoder().encodeToString(requestMsg.secretKey.getEncoded());
             
-            String encprivateKey = Base64.getEncoder().encodeToString(requestMsg.privateKey.getEncoded());
-            strrequestMsg.privateKey = encprivateKey;
-            strrequestMsg.secretKey = encsecretKey;
-            strrequestMsg.messageName = requestMsg.messageName;
-            strrequestMsg.messageContent = requestMsg.messageContent;
-            strrequestMsg.senderID = requestMsg.senderID;
-            strrequestMsg.userRole = requestMsg.userRole;
-            jsonInputString = gson.toJson(strrequestMsg);
-            
+            //String encprivateKey = Base64.getEncoder().encodeToString(requestMsg.privateKey.getEncoded());
+            //strrequestMsg.signature = requestMsg.signature;
+           // strrequestMsg.hashedValue = requestMsg.hashedValue;
+            //strrequestMsg.messageName = requestMsg.messageName;
+            //strrequestMsg.messageContent = requestMsg.messageContent;
+            //strrequestMsg.senderID = requestMsg.senderID;
+            //strrequestMsg.userRole = requestMsg.userRole;
+            //jsonInputString = gson.toJson(strrequestMsg);
+            jsonInputString = gson.toJson(requestMsg);
+
             try(OutputStream os = con.getOutputStream()) {
                 byte[] input = jsonInputString.getBytes("utf-8");
                 os.write(input, 0, input.length);			
@@ -200,7 +235,7 @@ class MessageQueue { //Message Queue using Message class
                 return errorMessage;
                 }
         }
-    }
+    //}
 
     //public synchronized Message get() {
     public StringMessage get(Message msg) {
@@ -584,7 +619,8 @@ class SecureSenderConnector {
 
     static void aSecureSenderConnector(String msg){
         try {
-            //System.out.println(msg);
+            System.out.println("Received message");
+            System.out.println(msg);
 
             ee = new EncryptionEncryptor();
             dss = new DigitalSignatureSigner();
@@ -658,6 +694,7 @@ throws Exception
                  System.out.println("NoSuchAlgorithmException caught");
              }*/
         //PrivateKey priKey = keyFactory.generatePrivate(privateKeySpec);
+        System.out.println("Running secure sender coordinator");
         while(i<Global.input)
         {
             i++;
@@ -672,6 +709,7 @@ throws Exception
                     /*Gson gson = new Gson();
                     Keys keysobj = new Keys();
                     keysobj = gson.fromJson(keysstring,Keys.class);*/
+                    System.out.println(message.messageContent);
 
                     byte[] secretKeyBytes = Base64.getDecoder().decode(message.secretKey);
                     byte[] privateKeyBytes = Base64.getDecoder().decode(message.privateKey);
@@ -680,13 +718,13 @@ throws Exception
                     KeyFactory keyFactory = KeyFactory.getInstance("DSA");
                     EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
                     PrivateKey priKey = keyFactory.generatePrivate(privateKeySpec);
-                    //System.out.println(message.secretKey);
-                    //System.out.println(message.privateKey);
+                    System.out.println("secretKey "+secKey);
+                    System.out.println("privateKey "+priKey);
 
                     byteMessage.messageContent = (message.messageContent).getBytes();
                     byteMessage.messageName = (message.messageName).getBytes();
 
-                   
+                    System.out.println("Byte message content "+byteMessage.messageContent);
 
                     byteMessage.messageContent = ee.encrypt(byteMessage.messageContent, secKey);
                     System.out.println("Encrypted messageContent!");
@@ -694,6 +732,7 @@ throws Exception
                     byteMessage.senderID = (message.senderID).getBytes();
                     byteMessage.senderID = ee.encrypt(byteMessage.senderID, secKey);
                     System.out.println("Encrypted senderID!");
+                    System.out.println(byteMessage.senderID);
 
                     byteMessage.userRole = (message.userRole).getBytes();
                     byteMessage.userRole = ee.encrypt(byteMessage.userRole, secKey);
@@ -705,7 +744,7 @@ throws Exception
                     byteMessage.signature = dss.sign(byteMessage.messageContent,priKey);
                     System.out.println("Signed messageContent! " + byteMessage.signature);
 
-
+                System.out.println(byteMessage);
                 Global.q2.put(byteMessage);
 
             } catch (NoSuchAlgorithmException e) {
@@ -733,6 +772,7 @@ class AsynchronousMCSender implements Runnable {
         ByteMessage byteMessage = new ByteMessage();
         //add Message object
         StringBMessage message = new StringBMessage();
+        System.out.println("Running sendsecAsync");
         while(i<Global.input)
         {
             i++;
