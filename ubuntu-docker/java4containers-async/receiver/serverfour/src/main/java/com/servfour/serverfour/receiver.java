@@ -16,8 +16,8 @@ import java.security.*;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
-//import com.google.gson.Gson; 
-//import com.google.gson.GsonBuilder;
+import com.google.gson.Gson; 
+import com.google.gson.GsonBuilder;
 
 
 @SpringBootApplication
@@ -52,7 +52,7 @@ public class receiver {
                 //PrivateKey privateKey = kp.getPrivate();
         
                //Parameters
-                Global.input =10;    //programmer will decide input
+                Global.input =1;    //programmer will decide input
         
                 Global.queueSize=25;  //program will decide queueSize
                 setSize setside= new setSize();
@@ -64,6 +64,8 @@ public class receiver {
         
                 //PublicKeyRepository publicKeyRepository = new PublicKeyRepository(publicKey);
                 //ReceiverComponent receiverComponent = new ReceiverComponent(secretKey);
+                //System.out.println(ob);
+                
 
                ReceiverComponent receiverComponent = new ReceiverComponent(ob);
                 //senderComponent.t_senderComponent.join();
@@ -134,6 +136,17 @@ class Message {
     String userRole=null;
     PrivateKey privateKey = null;
 }
+
+class StringBMessage {
+    String messageName = null;
+    String messageContent = null;
+        
+    String senderID=null;
+    String userRole=null;
+    String signature = null;
+    String hashedValue = null;
+                 }
+
 /*
 class PublicKeyRepository implements Runnable{
 
@@ -335,27 +348,33 @@ class Global{
 
 class ReceiverComponent implements Runnable
 {
-    Thread t_receiverComponent;
-
+    
+    StringBMessage message = new StringBMessage();
     SecretKey secretKey;
-    public ReceiverComponent(String message)
+    public ReceiverComponent(String msg)
     {
         t_receiverComponent = new Thread(this, "ReceiverComponent");
         t_receiverComponent.start();
         //this.secretKey = message.secretKey;
+        Gson gson = new Gson();
+        
+        this.message = gson.fromJson(msg,StringBMessage.class);
+        
     }
+
+    Thread t_receiverComponent;
 
     public void run()
     {
         int i = 0;
-        Message message = new Message();
+        StringBMessage message = new StringBMessage();
         //KeyRequestMessage keyRequestMessage = new KeyRequestMessage();
 
         while(i<Global.input)
         {
             i++;
-
-
+                
+            message = this.message;
             /*keyRequestMessage = Global.mbrSecretKey.receive();
 
             if (keyRequestMessage.messageName.equals("Request Key"))

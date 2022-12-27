@@ -3,5 +3,6 @@ com/servfour/serverfour/MBRSecretKey.class
 com/servfour/serverfour/receiver.class
 com/servfour/serverfour/ReceiverComponent.class
 com/servfour/serverfour/KeyRequestMessage.class
+com/servfour/serverfour/StringBMessage.class
 com/servfour/serverfour/Global.class
 com/servfour/serverfour/setSize.class

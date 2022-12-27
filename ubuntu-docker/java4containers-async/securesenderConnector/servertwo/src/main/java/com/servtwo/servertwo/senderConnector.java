@@ -27,6 +27,10 @@ import java.security.KeyFactory;
 import java.security.spec.EncodedKeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.InvalidKeySpecException;
+import javax.crypto.spec.DESKeySpec;
+
+import java.nio.charset.StandardCharsets;
+import org.apache.commons.codec.binary.Hex;
 
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
@@ -59,7 +63,7 @@ public class senderConnector {
           public String insert(@RequestBody String ob)
                     {
                         try{
-                            Global.input =10;
+                            Global.input =1;
                             Global.queueSize=25;  //program will decide queueSize
                             setSize setside= new setSize();
                             setside.setSize(Global.input,Global.queueSize);
@@ -192,7 +196,7 @@ class MessageQueue { //Message Queue using Message class
             try{
                 String posturl = "http://127.0.0.1:8080/sendmessage";
                 Gson gson = new Gson(); 
-                //StringBMessage strrequestMsg = new StringBMessage();
+                StringBMessage strrequestMsg = new StringBMessage();
             URL url = new URL (posturl);
             HttpURLConnection con = (HttpURLConnection)url.openConnection();
             con.setRequestMethod("POST");
@@ -203,9 +207,9 @@ class MessageQueue { //Message Queue using Message class
     
             //String encsecretKey = Base64.getEncoder().encodeToString(requestMsg.secretKey.getEncoded());
             
-            //String encprivateKey = Base64.getEncoder().encodeToString(requestMsg.privateKey.getEncoded());
+            //String encsignature = Base64.getEncoder().encodeToString(requestMsg.signature.getEncoded());
             //strrequestMsg.signature = requestMsg.signature;
-           // strrequestMsg.hashedValue = requestMsg.hashedValue;
+            //strrequestMsg.hashedValue = requestMsg.hashedValue;
             //strrequestMsg.messageName = requestMsg.messageName;
             //strrequestMsg.messageContent = requestMsg.messageContent;
             //strrequestMsg.senderID = requestMsg.senderID;
@@ -502,6 +506,7 @@ class Global{
             {
                 try{
                     c = Cipher.getInstance("DES/ECB/PKCS5Padding");
+                   
                 }
                 catch (Exception e){
                     e.printStackTrace();
@@ -520,6 +525,7 @@ class Global{
             {
                 try{
                     c = Cipher.getInstance("DES/ECB/PKCS5Padding");
+                    
                 }
                 catch (Exception e){
                     e.printStackTrace();
@@ -715,11 +721,12 @@ throws Exception
                     byte[] privateKeyBytes = Base64.getDecoder().decode(message.privateKey);
                   
                     SecretKey secKey = new SecretKeySpec(secretKeyBytes, 0, secretKeyBytes.length, "DES");
+                    //DESKeySpec secKey = new DESKeySpec(secretKeyBytes, 0);
                     KeyFactory keyFactory = KeyFactory.getInstance("DSA");
                     EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
                     PrivateKey priKey = keyFactory.generatePrivate(privateKeySpec);
-                    System.out.println("secretKey "+secKey);
-                    System.out.println("privateKey "+priKey);
+                    System.out.println("secretKey on ssc"+secKey);
+                    System.out.println("privateKey on ssc"+priKey);
 
                     byteMessage.messageContent = (message.messageContent).getBytes();
                     byteMessage.messageName = (message.messageName).getBytes();
@@ -727,6 +734,7 @@ throws Exception
                     System.out.println("Byte message content "+byteMessage.messageContent);
 
                     byteMessage.messageContent = ee.encrypt(byteMessage.messageContent, secKey);
+                    System.out.println("bytemessagecontent "+byteMessage.messageContent);
                     System.out.println("Encrypted messageContent!");
 
                     byteMessage.senderID = (message.senderID).getBytes();
@@ -773,19 +781,35 @@ class AsynchronousMCSender implements Runnable {
         //add Message object
         StringBMessage message = new StringBMessage();
         System.out.println("Running sendsecAsync");
+        Hex hex = new Hex();
         while(i<Global.input)
         {
             i++;
             byteMessage = Global.q2.get();
             //convert byteMessage to stringMessage for posting
-            message.messageContent = new String(byteMessage.messageContent);
+            try{
+            //message.messageContent = new String(byteMessage.messageContent,StandardCharsets.UTF_8);
+            System.out.println("mc on ssc "+byteMessage.messageContent);
+            String mcstring = Base64.getEncoder().encodeToString(byteMessage.messageContent);
+            message.messageContent = Base64.getUrlEncoder().encodeToString(mcstring.getBytes());
+            System.out.println("mc after encoding "+message.messageContent);
+           // message.messageContent = hex.encodeHexString(byteMessage.messageContent);
+            }catch(Exception e){
+                System.out.println(e.getMessage());}
+            //message.messageName = Base64.getEncoder().encodeToString(byteMessage.messageName);
             message.messageName = new String(byteMessage.messageName);
-            message.senderID = new String(byteMessage.senderID);
-            message.signature = new String(byteMessage.signature);
-            message.hashedValue = new String(byteMessage.hashedValue);
-            message.userRole = new String(byteMessage.userRole);
+            message.senderID = Base64.getEncoder().encodeToString(byteMessage.senderID);
+            //message.senderID = new String(byteMessage.senderID);
+            //message.signature = new String(byteMessage.signature,"utf-8");
+            message.signature = Base64.getEncoder().encodeToString(byteMessage.signature);
+            System.out.println("sig on ssc "+message.signature);
+            message.hashedValue = Base64.getEncoder().encodeToString(byteMessage.hashedValue);
+            //message.hashedValue = new String(byteMessage.hashedValue);
+            message.userRole = Base64.getEncoder().encodeToString(byteMessage.userRole);
+            //message.userRole = new String(byteMessage.userRole);
 
             //Global.q3.put(message); //replace with post request
+            System.out.println(message.messageContent);
             Global.q3.post(message);
         }
     }

@@ -30,7 +30,9 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.security.spec.InvalidKeySpecException;
 
-
+import java.nio.charset.StandardCharsets;
+import java.net.URLDecoder;
+import org.apache.commons.codec.binary.Hex;
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 
@@ -56,12 +58,12 @@ public class receiverConnector {
           {
             try{
             //Global.input =10;    //programmer will decide input
-            Global.input =10;    //programmer will decide input
+            Global.input =1;    //programmer will decide input
              
             Global.queueSize=25;  //program will decide queueSize
             setSize setside= new setSize();
             setside.setSize(Global.input,Global.queueSize);
-                    
+            System.out.println("Received body");        
             System.out.println(ob);
             SecureReceiverConnector.aSecureReceiverConnector(ob);
             SecureReceiverConnector.t_SecurityReceiverCoordinator.join();
@@ -576,6 +578,7 @@ class Global{
             {
                 try{
                     c = Cipher.getInstance("DES/ECB/PKCS5Padding");
+                   
                 }
                 catch (Exception e){
                     e.printStackTrace();
@@ -594,6 +597,7 @@ class Global{
             {
                 try{
                     c = Cipher.getInstance("DES/ECB/PKCS5Padding");
+                    
                 }
                 catch (Exception e){
                     e.printStackTrace();
@@ -621,6 +625,8 @@ class Global{
                 Signature signature = Signature.getInstance("SHAwithDSA");
                 signature.initVerify(publicKey);
                 signature.update(plainText);
+                System.out.println("Received signature ");
+                System.out.println(ReceivedSignature);
                 return signature.verify(ReceivedSignature);
             }
         }
@@ -740,9 +746,11 @@ class AsynchronousMCReceiver implements Runnable {
             i++;
             //byteMessage = Global.q3.get();
             byteMessage = Global.q4.get(); //added
-
+            System.out.println("Printing byte message");
+            System.out.println(byteMessage);
             //convert byteMessage to stringMessage for posting
             message.messageContent = new String(byteMessage.messageContent);
+            //,StandardCharsets.UTF_8);
             message.messageName = new String(byteMessage.messageName);
             message.senderID = new String(byteMessage.senderID);
             message.signature = new String(byteMessage.signature);
@@ -751,6 +759,7 @@ class AsynchronousMCReceiver implements Runnable {
 
             //Global.q4.put(byteMessage);
            // Global.q4.put(message);
+           System.out.println(message.messageContent);
             Global.receiverComponentQueue.post(message);
 
         }
@@ -795,12 +804,12 @@ class PublicKeyRepository implements Runnable{
 class SecurityReceiverCoordinator implements Runnable
 {
     //added
-    StringMessage msg = new StringMessage();
+    StringBMessage msg = new StringBMessage();
     public SecurityReceiverCoordinator(String strmsg){
                 //added
                 Gson gson = new Gson(); 
                 //Keys keysobj = new Keys();
-                this.msg = gson.fromJson(strmsg,StringMessage.class);
+                this.msg = gson.fromJson(strmsg,StringBMessage.class);
                 //this.msg = msg;
                                    }
     Thread t_SecurityReceiverCoordinator;
@@ -830,8 +839,9 @@ throws Exception{
         int i = 0;
         ByteMessage byteMessage = new ByteMessage();
         //StringMessage mess = new StringMessage();
-        StringMessage message =  new StringMessage();
+        StringBMessage message =  new StringBMessage();
         KeyRequestMessage keyRequestMessage = new KeyRequestMessage();
+        Hex hex = new Hex();
         //message = this.msg;
 
         //added
@@ -877,17 +887,45 @@ throws Exception{
                  PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
                  //PublicKey priKey = keyFactory.generatePrivate(publicKeySpec);
                  /*KEY REQUEST */
-
+                 System.out.println("sk on src "+secretKey);
+                 System.out.println("sig on src "+message.signature);
+                 byteMessage.signature = Base64.getDecoder().decode(message.signature);
+                 //System.out.println("sig on src "+message.signature);
                 //byteMessage = Global.q4.get();
-                byteMessage = Global.q4.get();
-      
+                System.out.println("Running in coordinator. MSg received");
+                //byteMessage = Global.q4.get();
+                //System.out.println(byteMessage);
+                
                 //keyRequestMessage.messageName = "Request Key";
                 //SecretKey secretKey = Global.mbrSecretKey.send(keyRequestMessage); //mbr = message buffer and response
                 //PublicKey publicKey = Global.mbrPublicKey.send(keyRequestMessage);
-                message.messageContent = new String(byteMessage.messageContent);
-                message.messageName = new String(byteMessage.messageName);
+                //message.messageContent = new String(byteMessage.messageContent);
+                //message.messageName = new String(byteMessage.messageName); hashedValue
+                System.out.println("mc on src b4 DECODING "+message.messageContent);
+                byte[] decodebyte = Base64.getUrlDecoder().decode(message.messageContent);
+                String decodestr = new String(decodebyte);
+                //, StandardCharsets.UTF_8.toString());
+                System.out.println("mc after url decoding "+decodestr);
+               byteMessage.messageContent = Base64.getDecoder().decode(decodestr);
+               String aftstr = new String(byteMessage.messageContent);
+               System.out.println("mc after base64 decoding "+aftstr);
+               // byteMessage.messageContent = hex.decodeHex(message.messageContent);
+                //byteMessage.messageContent = Base64.getDecoder().decode(message.messageContent);
+               // String mcstring = new String(mcbytearray);
+                //byteMessage.messageContent = mcstring.getBytes();
+               // byteMessage.signature = (message.signature).getBytes();
+                //byteMessage.signature = signatureBytes;
+                byteMessage.hashedValue = Base64.getDecoder().decode(message.hashedValue);
+                //byteMessage.hashedValue = (message.hashedValue).getBytes();
+                byteMessage.messageName = (message.messageName).getBytes();
+                byteMessage.senderID = Base64.getDecoder().decode(message.senderID);
+                //byteMessage.senderID = (message.senderID).getBytes();
+                byteMessage.userRole = Base64.getDecoder().decode(message.userRole);
+                //byteMessage.userRole = (message.userRole).getBytes();
+
                    //Digital Signature verification
                     result = dsv.verify(byteMessage.messageContent, publicKey, byteMessage.signature);
+                    System.out.println("result from verification "+result);
 
                     if(!result)
                     {
@@ -907,6 +945,8 @@ throws Exception{
                     System.out.println("Integrity verification Passed");
 
                    //Decrypted messageContent
+                   message.messageContent = new String(byteMessage.messageContent);
+                   System.out.println("msgcont "+message.messageContent);
                     byteMessage.messageContent = ed.decrypt(byteMessage.messageContent, secretKey);
                     message.messageContent = new String(byteMessage.messageContent);
                     System.out.println("Decryption happened: "+ message.messageContent );
