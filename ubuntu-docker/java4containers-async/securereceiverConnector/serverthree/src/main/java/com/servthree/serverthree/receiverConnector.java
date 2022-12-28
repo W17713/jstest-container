@@ -63,8 +63,8 @@ public class receiverConnector {
             Global.queueSize=25;  //program will decide queueSize
             setSize setside= new setSize();
             setside.setSize(Global.input,Global.queueSize);
-            System.out.println("Received body");        
-            System.out.println(ob);
+            //System.out.println("Received body");        
+            //System.out.println(ob);
             SecureReceiverConnector.aSecureReceiverConnector(ob);
             SecureReceiverConnector.t_SecurityReceiverCoordinator.join();
             SecureReceiverConnector.t_AsynchronousMCReceiver.join();
@@ -149,7 +149,7 @@ class KeyMessageRequest{
                                           }
                           String rspString = response.toString();
                                          //String msg = gson.fromJson(rspString, KeyRequest.class);
-                          System.out.println(rspString);
+                          //System.out.println(rspString);
                           return rspString;
                     }}catch(Exception e){
                                     String errorMessage = e.getMessage();
@@ -167,7 +167,7 @@ class KeyMessageRequest{
                       InputStream response = connection.getInputStream();
                       try (Scanner scanner = new Scanner(response)) {
                                    String responseBody = scanner.useDelimiter("\\A").next();
-                                   System.out.println(responseBody);
+                                   //System.out.println(responseBody);
                                    return responseBody;
                            }
                           // String rsp = response.toString();
@@ -311,7 +311,7 @@ class MessageQueue { //Message Queue using Message class
                     }
             String rspString = response.toString();
             //String msg = gson.fromJson(rspString, KeyRequest.class);
-            System.out.println(rspString);
+            //System.out.println(rspString);
             return rspString;
             }}catch(Exception e){
             String errorMessage = e.getMessage();
@@ -625,8 +625,8 @@ class Global{
                 Signature signature = Signature.getInstance("SHAwithDSA");
                 signature.initVerify(publicKey);
                 signature.update(plainText);
-                System.out.println("Received signature ");
-                System.out.println(ReceivedSignature);
+               // System.out.println("Received signature ");
+               // System.out.println(ReceivedSignature);
                 return signature.verify(ReceivedSignature);
             }
         }
@@ -746,8 +746,8 @@ class AsynchronousMCReceiver implements Runnable {
             i++;
             //byteMessage = Global.q3.get();
             byteMessage = Global.q4.get(); //added
-            System.out.println("Printing byte message");
-            System.out.println(byteMessage);
+            //System.out.println("Printing byte message");
+            //System.out.println(byteMessage);
             //convert byteMessage to stringMessage for posting
             message.messageContent = new String(byteMessage.messageContent);
             //,StandardCharsets.UTF_8);
@@ -759,7 +759,7 @@ class AsynchronousMCReceiver implements Runnable {
 
             //Global.q4.put(byteMessage);
            // Global.q4.put(message);
-           System.out.println(message.messageContent);
+           //System.out.println(message.messageContent);
             Global.receiverComponentQueue.post(message);
 
         }
@@ -887,12 +887,12 @@ throws Exception{
                  PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
                  //PublicKey priKey = keyFactory.generatePrivate(publicKeySpec);
                  /*KEY REQUEST */
-                 System.out.println("sk on src "+secretKey);
-                 System.out.println("sig on src "+message.signature);
+                 //System.out.println("sk on src "+secretKey);
+                 //System.out.println("sig on src "+message.signature);
                  byteMessage.signature = Base64.getDecoder().decode(message.signature);
                  //System.out.println("sig on src "+message.signature);
                 //byteMessage = Global.q4.get();
-                System.out.println("Running in coordinator. MSg received");
+               // System.out.println("Running in coordinator. MSg received");
                 //byteMessage = Global.q4.get();
                 //System.out.println(byteMessage);
                 
@@ -901,14 +901,14 @@ throws Exception{
                 //PublicKey publicKey = Global.mbrPublicKey.send(keyRequestMessage);
                 //message.messageContent = new String(byteMessage.messageContent);
                 //message.messageName = new String(byteMessage.messageName); hashedValue
-                System.out.println("mc on src b4 DECODING "+message.messageContent);
+               // System.out.println("mc on src b4 DECODING "+message.messageContent);
                 byte[] decodebyte = Base64.getUrlDecoder().decode(message.messageContent);
                 String decodestr = new String(decodebyte);
                 //, StandardCharsets.UTF_8.toString());
-                System.out.println("mc after url decoding "+decodestr);
+                //System.out.println("mc after url decoding "+decodestr);
                byteMessage.messageContent = Base64.getDecoder().decode(decodestr);
                String aftstr = new String(byteMessage.messageContent);
-               System.out.println("mc after base64 decoding "+aftstr);
+               //System.out.println("mc after base64 decoding "+aftstr);
                // byteMessage.messageContent = hex.decodeHex(message.messageContent);
                 //byteMessage.messageContent = Base64.getDecoder().decode(message.messageContent);
                // String mcstring = new String(mcbytearray);
@@ -925,7 +925,7 @@ throws Exception{
 
                    //Digital Signature verification
                     result = dsv.verify(byteMessage.messageContent, publicKey, byteMessage.signature);
-                    System.out.println("result from verification "+result);
+                    //System.out.println("result from verification "+result);
 
                     if(!result)
                     {
@@ -946,7 +946,7 @@ throws Exception{
 
                    //Decrypted messageContent
                    message.messageContent = new String(byteMessage.messageContent);
-                   System.out.println("msgcont "+message.messageContent);
+                   //System.out.println("msgcont "+message.messageContent);
                     byteMessage.messageContent = ed.decrypt(byteMessage.messageContent, secretKey);
                     message.messageContent = new String(byteMessage.messageContent);
                     System.out.println("Decryption happened: "+ message.messageContent );
@@ -955,7 +955,7 @@ throws Exception{
                    //Decrypted senderID
                     byteMessage.senderID = ed.decrypt(byteMessage.senderID, secretKey);
                     message.senderID = new String(byteMessage.senderID);
- //                   System.out.println("Decryption senderID: "+ message.senderID );
+                    System.out.println("Decryption senderID: "+ message.senderID );
 
                   //Decrypted userRole
                    byteMessage.userRole = ed.decrypt(byteMessage.userRole, secretKey);

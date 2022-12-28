@@ -68,8 +68,8 @@ public class senderConnector {
                             setSize setside= new setSize();
                             setside.setSize(Global.input,Global.queueSize);
                             //Global.input =10;
-                            System.out.println("received body");
-                            System.out.println(ob);
+                            //System.out.println("received body");
+                            //System.out.println(ob);
                             SecureSenderConnector.aSecureSenderConnector(ob);
                             //senderComponent.t_senderComponent.join();
                             SecureSenderConnector.t_SecuritySenderCoordinator.join();
@@ -625,8 +625,8 @@ class SecureSenderConnector {
 
     static void aSecureSenderConnector(String msg){
         try {
-            System.out.println("Received message");
-            System.out.println(msg);
+            //System.out.println("Received message");
+            //System.out.println(msg);
 
             ee = new EncryptionEncryptor();
             dss = new DigitalSignatureSigner();
@@ -700,7 +700,7 @@ throws Exception
                  System.out.println("NoSuchAlgorithmException caught");
              }*/
         //PrivateKey priKey = keyFactory.generatePrivate(privateKeySpec);
-        System.out.println("Running secure sender coordinator");
+        //System.out.println("Running secure sender coordinator");
         while(i<Global.input)
         {
             i++;
@@ -715,7 +715,7 @@ throws Exception
                     /*Gson gson = new Gson();
                     Keys keysobj = new Keys();
                     keysobj = gson.fromJson(keysstring,Keys.class);*/
-                    System.out.println(message.messageContent);
+                    //System.out.println(message.messageContent);
 
                     byte[] secretKeyBytes = Base64.getDecoder().decode(message.secretKey);
                     byte[] privateKeyBytes = Base64.getDecoder().decode(message.privateKey);
@@ -725,34 +725,34 @@ throws Exception
                     KeyFactory keyFactory = KeyFactory.getInstance("DSA");
                     EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
                     PrivateKey priKey = keyFactory.generatePrivate(privateKeySpec);
-                    System.out.println("secretKey on ssc"+secKey);
-                    System.out.println("privateKey on ssc"+priKey);
+                    //System.out.println("secretKey on ssc"+secKey);
+                    //System.out.println("privateKey on ssc"+priKey);
 
                     byteMessage.messageContent = (message.messageContent).getBytes();
                     byteMessage.messageName = (message.messageName).getBytes();
 
-                    System.out.println("Byte message content "+byteMessage.messageContent);
+                    //System.out.println("Byte message content "+byteMessage.messageContent);
 
                     byteMessage.messageContent = ee.encrypt(byteMessage.messageContent, secKey);
-                    System.out.println("bytemessagecontent "+byteMessage.messageContent);
+                    //System.out.println("bytemessagecontent "+byteMessage.messageContent);
                     System.out.println("Encrypted messageContent!");
 
                     byteMessage.senderID = (message.senderID).getBytes();
                     byteMessage.senderID = ee.encrypt(byteMessage.senderID, secKey);
                     System.out.println("Encrypted senderID!");
-                    System.out.println(byteMessage.senderID);
+                    //System.out.println(byteMessage.senderID);
 
                     byteMessage.userRole = (message.userRole).getBytes();
                     byteMessage.userRole = ee.encrypt(byteMessage.userRole, secKey);
                     System.out.println("Encrypted userRole!");
 
                     byteMessage.hashedValue = hs.generate(byteMessage.messageContent);
-                    System.out.println("Hashed value! " + byteMessage.hashedValue);
+                    System.out.println("Hashed value! ");
 
                     byteMessage.signature = dss.sign(byteMessage.messageContent,priKey);
-                    System.out.println("Signed messageContent! " + byteMessage.signature);
+                    System.out.println("Signed messageContent! ");
 
-                System.out.println(byteMessage);
+                //System.out.println(byteMessage);
                 Global.q2.put(byteMessage);
 
             } catch (NoSuchAlgorithmException e) {
@@ -780,7 +780,7 @@ class AsynchronousMCSender implements Runnable {
         ByteMessage byteMessage = new ByteMessage();
         //add Message object
         StringBMessage message = new StringBMessage();
-        System.out.println("Running sendsecAsync");
+        //System.out.println("Running sendsecAsync");
         Hex hex = new Hex();
         while(i<Global.input)
         {
@@ -789,10 +789,10 @@ class AsynchronousMCSender implements Runnable {
             //convert byteMessage to stringMessage for posting
             try{
             //message.messageContent = new String(byteMessage.messageContent,StandardCharsets.UTF_8);
-            System.out.println("mc on ssc "+byteMessage.messageContent);
+            //System.out.println("mc on ssc "+byteMessage.messageContent);
             String mcstring = Base64.getEncoder().encodeToString(byteMessage.messageContent);
             message.messageContent = Base64.getUrlEncoder().encodeToString(mcstring.getBytes());
-            System.out.println("mc after encoding "+message.messageContent);
+            //System.out.println("mc after encoding "+message.messageContent);
            // message.messageContent = hex.encodeHexString(byteMessage.messageContent);
             }catch(Exception e){
                 System.out.println(e.getMessage());}
@@ -802,14 +802,14 @@ class AsynchronousMCSender implements Runnable {
             //message.senderID = new String(byteMessage.senderID);
             //message.signature = new String(byteMessage.signature,"utf-8");
             message.signature = Base64.getEncoder().encodeToString(byteMessage.signature);
-            System.out.println("sig on ssc "+message.signature);
+            //System.out.println("sig on ssc "+message.signature);
             message.hashedValue = Base64.getEncoder().encodeToString(byteMessage.hashedValue);
             //message.hashedValue = new String(byteMessage.hashedValue);
             message.userRole = Base64.getEncoder().encodeToString(byteMessage.userRole);
             //message.userRole = new String(byteMessage.userRole);
 
             //Global.q3.put(message); //replace with post request
-            System.out.println(message.messageContent);
+            //System.out.println(message.messageContent);
             Global.q3.post(message);
         }
     }

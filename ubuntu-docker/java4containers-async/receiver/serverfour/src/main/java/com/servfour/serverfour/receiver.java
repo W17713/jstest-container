@@ -38,7 +38,7 @@ public class receiver {
     public String insert(@RequestBody String ob)
           {
               try{
-                System.out.println(ob);
+                //System.out.println(ob);
                 //KeyGenerator keygen = KeyGenerator.getInstance("DES");
                 //SecretKey secretKey = keygen.generateKey();
                 

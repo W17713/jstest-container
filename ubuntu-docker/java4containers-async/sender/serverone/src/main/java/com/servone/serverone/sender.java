@@ -174,7 +174,7 @@ class KeyMessageRequest{
         InputStream response = connection.getInputStream();
         try (Scanner scanner = new Scanner(response)) {
                 String responseBody = scanner.useDelimiter("\\A").next();
-                System.out.println(responseBody);
+                //System.out.println(responseBody);
                 return responseBody;
         }
        // String rsp = response.toString();

@@ -55,14 +55,14 @@ public class key {
                         keys.publicKey = encpublicKey;
                         keys.privateKey= encprivateKey;
                         Global.keysJsonString = gson.toJson(keys);
-                        System.out.println(Global.keysJsonString);
+                        System.out.println("Key pair generated");
                 
                         //convert keys to string and return
         
                         //PublicKeyRepository publicKeyRepository = new PublicKeyRepository(publicKey);
                         //ReceiverComponent receiverComponent = new ReceiverComponent(secretKey);
                         
-                        return "This is the key genrator server";
+                        return "This is the key generator server";
                         }catch(Exception e){
                             String errorMessage = null;
                             errorMessage = e.getMessage();
