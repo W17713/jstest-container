@@ -2,15 +2,17 @@ run docker images with below command
 docker-compose up
 
 open below in browser:
-localhost:443/customer
-localhost:3000/securesender
-localhost:8080/securereceiver
-localhost:80/requisition
+http://localhost:8000/key
+http://localhost:8008/sender
+http://localhost:3000/securesender
+http://localhost:8080/securereceiver
+http://localhost:80/receiver
 
 
-NOTE: If package is not built yet, build packages for the four servers with maven
+
+NOTE: If package is not built yet, build packages for the five servers with maven
   
-build package for the four different servers:
+build package for the five different servers:
 cd $DIR_NAME
 ./mvnw package
 
@@ -20,7 +22,9 @@ cd ..
 docker-compose up
 
 open below in browser:
-localhost:443/customer
-localhost:3000/securesender
-localhost:8080/securereceiver
-localhost:80/requisition
+http://localhost:8000/key
+http://localhost:8008/sender
+http://localhost:3000/securesender
+http://localhost:8080/securereceiver
+http://localhost/receiver
+
